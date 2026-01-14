@@ -1,0 +1,24 @@
+[package]
+name = "thulp-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Core types and traits for thulp"
+rust-version.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+async-trait = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
+tokio = { workspace = true }
+criterion = { workspace = true }
+
+[[bench]]
+name = "tool_benchmarks"
+harness = false

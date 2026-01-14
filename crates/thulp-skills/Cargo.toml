@@ -1,0 +1,23 @@
+[package]
+name = "thulp-skills"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "thulp_skills"
+path = "src/lib.rs"
+
+[dependencies]
+thulp-core = { workspace = true }
+thulp-mcp = { workspace = true, optional = true }
+thulp-query = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+tera = { workspace = true }
+thiserror.workspace = true
+
+[features]
+default = []
+mcp = ["dep:thulp-mcp"]

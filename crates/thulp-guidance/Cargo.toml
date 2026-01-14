@@ -1,0 +1,14 @@
+[package]
+name = "thulp-guidance"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "thulp_guidance"
+path = "src/lib.rs"
+
+[dependencies]
+thulp-core = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+serde_json = { workspace = true }

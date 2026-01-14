@@ -1,0 +1,93 @@
+[workspace]
+resolver = "2"
+
+members = [
+    "crates/thulp-core",
+    "crates/thulp-query",
+    "crates/thulp-mcp",
+    "crates/thulp-adapter",
+    "crates/thulp-workspace",
+    "crates/thulp-skills",
+    "crates/thulp-browser",
+    "crates/thulp-guidance",
+    "crates/thulp-registry",
+    "crates/thulp-cli",
+    "examples",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Dirmacs <contact@dirmacs.org>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/dirmacs/thulp"
+description = "Execution context engineering platform for AI agents"
+rust-version = "1.75"
+
+[workspace.dependencies]
+# Internal crates
+thulp-core = { path = "crates/thulp-core" }
+thulp-query = { path = "crates/thulp-query" }
+thulp-mcp = { path = "crates/thulp-mcp" }
+thulp-adapter = { path = "crates/thulp-adapter" }
+thulp-workspace = { path = "crates/thulp-workspace" }
+thulp-skills = { path = "crates/thulp-skills" }
+thulp-browser = { path = "crates/thulp-browser" }
+thulp-guidance = { path = "crates/thulp-guidance" }
+thulp-registry = { path = "crates/thulp-registry" }
+
+# Async runtime
+tokio = { version = "1.43", features = ["full"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+
+# Error handling
+thiserror = "2.0"
+anyhow = "1.0"
+
+# CLI
+clap = { version = "4.5", features = ["derive", "env"] }
+
+# Async traits
+async-trait = "0.1"
+
+# HTTP client
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+
+# Logging/tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Parser combinators (for query engine)
+nom = "7.1"
+
+# Templating (for skills)
+tera = "1.20"
+
+# Note: ares-server integration must be added to individual crate Cargo.toml files
+# Use: cargo build --features ares-server
+
+# rs-utcp integration
+# rs-utcp = "0.3"  # Requires protoc - will add back later
+
+# Testing dependencies for workspace members
+proptest = "1.5"
+criterion = "0.5"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+
+[profile.dev]
+debug = true
+
+[profile.test]
+debug = true
+
+# Patch ares-server to use local vendor during development
+[patch.crates-io]
+ares-server = { path = "vendor/ares-server" }

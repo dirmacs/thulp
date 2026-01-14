@@ -1,0 +1,15 @@
+[package]
+name = "thulp-registry"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "thulp_registry"
+path = "src/lib.rs"
+
+[dependencies]
+thulp-core = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+reqwest = { workspace = true }

@@ -1,0 +1,205 @@
+//! # thulp-workspace
+//!
+//! Workspace and session management for thulp.
+//!
+//! This crate provides functionality for managing agent workspaces,
+//! including context, state, and session persistence.
+
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use std::collections::HashMap;
+use std::path::PathBuf;
+
+/// Result type for workspace operations
+pub type Result<T> = std::result::Result<T, WorkspaceError>;
+
+/// Errors that can occur in workspace operations
+#[derive(Debug, thiserror::Error)]
+pub enum WorkspaceError {
+    #[error("IO error: {0}")]
+    Io(#[from] std::io::Error),
+
+    #[error("Serialization error: {0}")]
+    Serialization(String),
+
+    #[error("Workspace not found: {0}")]
+    NotFound(String),
+}
+
+/// A workspace for an agent session
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Workspace {
+    /// Workspace ID
+    pub id: String,
+
+    /// Workspace name
+    pub name: String,
+
+    /// Root directory path
+    pub root: PathBuf,
+
+    /// Workspace metadata
+    #[serde(default)]
+    pub metadata: HashMap<String, String>,
+
+    /// Context data
+    #[serde(default)]
+    pub context: HashMap<String, Value>,
+}
+
+impl Workspace {
+    /// Create a new workspace
+    pub fn new(id: impl Into<String>, name: impl Into<String>, root: PathBuf) -> Self {
+        Self {
+            id: id.into(),
+            name: name.into(),
+            root,
+            metadata: HashMap::new(),
+            context: HashMap::new(),
+        }
+    }
+
+    /// Set metadata
+    pub fn with_metadata(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
+        self.metadata.insert(key.into(), value.into());
+        self
+    }
+
+    /// Set context data
+    pub fn with_context(mut self, key: impl Into<String>, value: Value) -> Self {
+        self.context.insert(key.into(), value);
+        self
+    }
+
+    /// Get context value
+    pub fn get_context(&self, key: &str) -> Option<&Value> {
+        self.context.get(key)
+    }
+
+    /// Get metadata value
+    pub fn get_metadata(&self, key: &str) -> Option<&String> {
+        self.metadata.get(key)
+    }
+}
+
+/// Manager for multiple workspaces
+#[derive(Debug, Default)]
+pub struct WorkspaceManager {
+    workspaces: HashMap<String, Workspace>,
+    active_workspace: Option<String>,
+}
+
+impl WorkspaceManager {
+    /// Create a new workspace manager
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Create and register a new workspace
+    pub fn create(&mut self, workspace: Workspace) {
+        self.workspaces.insert(workspace.id.clone(), workspace);
+    }
+
+    /// Get a workspace by ID
+    pub fn get(&self, id: &str) -> Option<&Workspace> {
+        self.workspaces.get(id)
+    }
+
+    /// Get a mutable workspace by ID
+    pub fn get_mut(&mut self, id: &str) -> Option<&mut Workspace> {
+        self.workspaces.get_mut(id)
+    }
+
+    /// Set the active workspace
+    pub fn set_active(&mut self, id: &str) -> Result<()> {
+        if !self.workspaces.contains_key(id) {
+            return Err(WorkspaceError::NotFound(id.to_string()));
+        }
+        self.active_workspace = Some(id.to_string());
+        Ok(())
+    }
+
+    /// Get the active workspace
+    pub fn get_active(&self) -> Option<&Workspace> {
+        self.active_workspace
+            .as_ref()
+            .and_then(|id| self.workspaces.get(id))
+    }
+
+    /// Get the active workspace mutably
+    pub fn get_active_mut(&mut self) -> Option<&mut Workspace> {
+        self.active_workspace
+            .as_ref()
+            .and_then(|id| self.workspaces.get_mut(id))
+    }
+
+    /// List all workspace IDs
+    pub fn list(&self) -> Vec<String> {
+        self.workspaces.keys().cloned().collect()
+    }
+
+    /// Remove a workspace
+    pub fn remove(&mut self, id: &str) -> Option<Workspace> {
+        if self.active_workspace.as_deref() == Some(id) {
+            self.active_workspace = None;
+        }
+        self.workspaces.remove(id)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_workspace_creation() {
+        let workspace = Workspace::new("test", "Test Workspace", PathBuf::from("/tmp/test"));
+        assert_eq!(workspace.id, "test");
+        assert_eq!(workspace.name, "Test Workspace");
+    }
+
+    #[test]
+    fn test_workspace_builder() {
+        let workspace = Workspace::new("test", "Test", PathBuf::from("/tmp"))
+            .with_metadata("version", "1.0")
+            .with_context("key", serde_json::json!({"value": 42}));
+
+        assert_eq!(workspace.get_metadata("version"), Some(&"1.0".to_string()));
+        assert!(workspace.get_context("key").is_some());
+    }
+
+    #[test]
+    fn test_workspace_manager() {
+        let mut manager = WorkspaceManager::new();
+
+        let workspace = Workspace::new("test", "Test", PathBuf::from("/tmp"));
+        manager.create(workspace);
+
+        assert!(manager.get("test").is_some());
+        assert_eq!(manager.list().len(), 1);
+    }
+
+    #[test]
+    fn test_active_workspace() {
+        let mut manager = WorkspaceManager::new();
+
+        let workspace = Workspace::new("test", "Test", PathBuf::from("/tmp"));
+        manager.create(workspace);
+
+        manager.set_active("test").unwrap();
+        assert!(manager.get_active().is_some());
+        assert_eq!(manager.get_active().unwrap().id, "test");
+    }
+
+    #[test]
+    fn test_remove_workspace() {
+        let mut manager = WorkspaceManager::new();
+
+        let workspace = Workspace::new("test", "Test", PathBuf::from("/tmp"));
+        manager.create(workspace);
+
+        manager.set_active("test").unwrap();
+        assert!(manager.remove("test").is_some());
+        assert!(manager.get_active().is_none());
+    }
+}

@@ -1,0 +1,28 @@
+[package]
+name = "thulp-examples"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[[example]]
+name = "tool_definition"
+path = "tool_definition_example.rs"
+
+[[example]]
+name = "mcp"
+path = "mcp_example.rs"
+
+[[example]]
+name = "adapter"
+path = "adapter_example.rs"
+
+[dependencies]
+thulp-core = { path = "../crates/thulp-core" }
+thulp-mcp = { path = "../crates/thulp-mcp", optional = true }
+thulp-adapter = { path = "../crates/thulp-adapter" }
+serde_json = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+
+[features]
+default = []
+mcp = ["dep:thulp-mcp"]

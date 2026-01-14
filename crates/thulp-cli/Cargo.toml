@@ -1,0 +1,26 @@
+[package]
+name = "thulp-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "CLI for thulp - Execution context engineering platform"
+rust-version.workspace = true
+
+[[bin]]
+name = "thulp"
+path = "src/main.rs"
+
+[dependencies]
+thulp-core = { workspace = true }
+thulp-mcp = { workspace = true, optional = true }
+thulp-adapter = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+clap = { workspace = true, features = ["derive", "env"] }
+
+[features]
+default = []
+mcp = ["dep:thulp-mcp"]
