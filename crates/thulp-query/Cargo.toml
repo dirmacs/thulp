@@ -1,6 +1,12 @@
 [package]
 name = "thulp-query"
 version = "0.1.0"
+authors = ["Dirmacs <contact@dirmacs.org>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/dirmacs/thulp"
+description = "Query engine for searching and filtering thulp tools"
+rust-version = "1.75"
+
 edition = "2021"
 
 [lib]

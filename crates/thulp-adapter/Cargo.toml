@@ -1,7 +1,18 @@
 [package]
 name = "thulp-adapter"
 version = "0.1.0"
+authors = ["Dirmacs <contact@dirmacs.org>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/dirmacs/thulp"
+description = "Adapter for converting external tool definitions to thulp format"
+rust-version = "1.75"
+
 edition = "2021"
+authors = ["Dirmacs <contact@dirmacs.org>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/dirmacs/thulp"
+description = "Adapter for converting external tool definitions to thulp format"
+rust-version = "1.75"
 
 [lib]
 name = "thulp_adapter"
