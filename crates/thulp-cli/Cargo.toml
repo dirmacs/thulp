@@ -1,25 +1,25 @@
 [package]
 name = "thulp-cli"
-version.workspace = true
-edition.workspace = true
+version = "0.1.0"
+edition = "2021"
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "CLI for thulp - Execution context engineering platform"
-rust-version.workspace = true
+rust-version = "0.1.0"
 
 [[bin]]
 name = "thulp"
 path = "src/main.rs"
 
 [dependencies]
-thulp-core = { workspace = true }
-thulp-mcp = { workspace = true, optional = true }
-thulp-adapter = { workspace = true }
-serde_json = { workspace = true }
-serde_yaml = { workspace = true }
-tokio = { workspace = true, features = ["full"] }
-clap = { workspace = true, features = ["derive", "env"] }
+thulp-core = { version = "0.1.0" }
+thulp-mcp = { version = "0.1.0", optional = true }
+thulp-adapter = { version = "0.1.0" }
+serde_json = "1.0"
+serde_yaml = "0.9"
+tokio = { version = "1.43", features = ["full"] }
+clap = { version = "4.5", features = ["derive", "env"] }
 
 [features]
 default = []

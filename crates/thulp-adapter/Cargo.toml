@@ -1,16 +1,16 @@
 [package]
 name = "thulp-adapter"
-version.workspace = true
-edition.workspace = true
+version = "0.1.0"
+edition = "2021"
 
 [lib]
 name = "thulp_adapter"
 path = "src/lib.rs"
 
 [dependencies]
-thulp-core = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-serde_yaml = { workspace = true }
-reqwest = { workspace = true, features = ["json"] }
+thulp-core = { version = "0.1.0" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 regex = "1.10"

@@ -6945,7 +6945,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
- "thulp-core",
+ "thulp-core 0.1.0",
 ]
 
 [[package]]
@@ -6956,7 +6956,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.17",
- "thulp-core",
+ "thulp-core 0.1.0",
  "tokio",
 ]
 
@@ -6968,7 +6968,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "thulp-adapter",
- "thulp-core",
+ "thulp-core 0.1.0",
  "thulp-mcp",
  "tokio",
 ]
@@ -6987,12 +6987,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "thulp-core"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2756b7165cc1339ae1c2001c45755eac9dd157173fa5f25b20cd348f542a9966"
+dependencies = [
+ "async-trait",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.17",
+]
+
+[[package]]
 name = "thulp-examples"
 version = "0.1.0"
 dependencies = [
  "serde_json",
  "thulp-adapter",
- "thulp-core",
+ "thulp-core 0.1.0",
  "thulp-mcp",
  "tokio",
 ]
@@ -7004,7 +7016,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.17",
- "thulp-core",
+ "thulp-core 0.1.0",
 ]
 
 [[package]]
@@ -7017,7 +7029,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.17",
- "thulp-core",
+ "thulp-core 0.1.0",
  "tokio",
  "uuid",
 ]
@@ -7031,7 +7043,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.17",
- "thulp-core",
+ "thulp-core 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -7041,7 +7053,7 @@ dependencies = [
  "reqwest 0.12.28",
  "serde",
  "serde_json",
- "thulp-core",
+ "thulp-core 0.1.0",
  "tokio",
 ]
 
@@ -7054,7 +7066,7 @@ dependencies = [
  "serde_yaml",
  "tera",
  "thiserror 2.0.17",
- "thulp-core",
+ "thulp-core 0.1.0",
  "thulp-mcp",
  "thulp-query",
  "tokio",
@@ -7068,7 +7080,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "thiserror 2.0.17",
- "thulp-core",
+ "thulp-core 0.1.0",
  "tokio",
 ]
 

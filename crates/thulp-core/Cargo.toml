@@ -1,12 +1,12 @@
 [package]
 name = "thulp-core"
-version.workspace = true
-edition.workspace = true
+version = "0.1.0"
+edition = "2021"
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Core types and traits for thulp"
-rust-version.workspace = true
+rust-version = "0.1.0"
 
 [dependencies]
 serde = { workspace = true }

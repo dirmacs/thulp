@@ -1,16 +1,16 @@
 [package]
 name = "thulp-browser"
-version.workspace = true
-edition.workspace = true
+version = "0.1.0"
+edition = "2021"
 
 [lib]
 name = "thulp_browser"
 path = "src/lib.rs"
 
 [dependencies]
-thulp-core = { workspace = true }
-tokio = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-thiserror = { workspace = true }
-reqwest = { workspace = true }
+thulp-core = { version = "0.1.0" }
+tokio = { version = "1.43", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "2.0"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }

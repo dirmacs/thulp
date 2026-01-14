@@ -1,22 +1,22 @@
 [package]
 name = "thulp-skills"
-version.workspace = true
-edition.workspace = true
+version = "0.1.0"
+edition = "2021"
 
 [lib]
 name = "thulp_skills"
 path = "src/lib.rs"
 
 [dependencies]
-thulp-core = { workspace = true }
-thulp-mcp = { workspace = true, optional = true }
-thulp-query = { workspace = true }
-tokio = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-serde_yaml = { workspace = true }
-tera = { workspace = true }
-thiserror.workspace = true
+thulp-core = { version = "0.1.0" }
+thulp-mcp = { version = "0.1.0", optional = true }
+thulp-query = { version = "0.1.0" }
+tokio = { version = "1.43", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+tera = "1.20"
+thiserror = "2.0"
 
 [features]
 default = []
