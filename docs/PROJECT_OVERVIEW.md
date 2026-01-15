@@ -83,5 +83,5 @@ MIT/Apache-2.0 dual license (standard Rust ecosystem licensing)
 
 ## Links
 
-- **Dirmacs Organization**: https://github.com/dirmacs
-- **rs-utcp** (core dependency): https://github.com/universal-tool-calling-protocol/rs-utcp
+- **Dirmacs Organization**: <https://github.com/dirmacs>
+- **rs-utcp** (core dependency): <https://github.com/universal-tool-calling-protocol/rs-utcp>
