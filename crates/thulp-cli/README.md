@@ -57,11 +57,11 @@ thulp tools show read_file --output json
 ### Validate Tool Arguments
 
 ```bash
-# Validate with JSON arguments
-thulp tools validate read_file --args '{"path": "/etc/hosts"}'
+# Validate with JSON arguments (positional argument)
+thulp tools validate read_file '{"path": "/etc/hosts"}'
 
 # JSON output for scripting
-thulp tools validate read_file --args '{}' --output json
+thulp tools validate read_file '{}' --output json
 ```
 
 ### MCP Server Connection (requires `mcp` feature)
@@ -77,7 +77,7 @@ thulp mcp connect-stdio myserver /path/to/mcp-server -- --verbose
 thulp mcp list
 
 # Call MCP tool
-thulp mcp call search --args '{"query": "test"}'
+thulp mcp call search '{"query": "test"}'
 
 # Check connection status
 thulp mcp status
