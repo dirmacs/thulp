@@ -1,23 +1,33 @@
-# Thulp
+# thulp
 
 [![CI](https://github.com/dirmacs/thulp/actions/workflows/ci.yml/badge.svg)](https://github.com/dirmacs/thulp/actions/workflows/ci.yml)
 [![crates.io](https://img.shields.io/crates/v/thulp-core.svg)](https://crates.io/crates/thulp-core)
 [![docs.rs](https://docs.rs/thulp-core/badge.svg)](https://docs.rs/thulp-core)
 [![License](https://img.shields.io/crates/l/thulp-core.svg)](LICENSE-MIT)
 
-**Execution Context Engineering Platform for AI Agents**
+## Execution Context Engineering Platform for AI Agents
 
-Thulp is a Rust-based toolkit for building AI agents with rich execution contexts. It provides abstractions for tool discovery, execution, workspace management, and integration with the Model Context Protocol (MCP).
+Thulp is a Rust-based toolkit for building AI agents with rich execution
+contexts. It provides abstractions for tool discovery, execution, workspace
+management, and integration with the Model Context Protocol (MCP) via the
+[UTCP](https://github.com/universal-tool-calling-protocol/rs-utcp)
+(Universal Tool Calling Protocol) implementation.
 
 ## Overview
 
-Thulp enables AI agents to interact with external tools and services through a unified interface. It handles the complexity of tool discovery, validation, execution, and result handling while providing extensibility through adapters and custom integrations.
+Thulp enables AI agents to interact with external tools and services through a
+unified interface. It handles the complexity of tool discovery, validation,
+execution, and result handling while providing extensibility through adapters
+and custom integrations.
 
 ### Key Features
 
-- **Unified Tool Abstraction**: Consistent interface for defining, validating, and executing tools
-- **MCP Integration**: Full Model Context Protocol support via `rs-utcp` (tools, resources, prompts)
-- **Type-Safe Parameters**: Strongly-typed parameter validation with JSON Schema support
+- **Unified Tool Abstraction**: Consistent interface for defining, validating,
+  and executing tools
+- **MCP Integration**: Full Model Context Protocol support via `rs-utcp` UTCP
+  implementation (tools, resources, prompts)
+- **Type-Safe Parameters**: Strongly-typed parameter validation with JSON
+  Schema support
 - **Query DSL**: Powerful query language for filtering and searching tools
 - **Skill Workflows**: Compose multi-step tool workflows with variable interpolation
 - **Async by Design**: Built on `tokio` for efficient async execution
@@ -31,28 +41,28 @@ Thulp is organized as a Cargo workspace with 10 crates:
 
 ### Core Crates
 
-| Crate | Description |
-|-------|-------------|
-| **thulp-core** | Core types and traits (`ToolDefinition`, `Parameter`, `ToolCall`, `Transport`) |
-| **thulp-mcp** | MCP transport implementation (STDIO/HTTP, tools, resources, prompts) |
-| **thulp-adapter** | OpenAPI v2/v3 to tool definition conversion |
-| **thulp-registry** | Async thread-safe tool registry with tagging |
+| Crate              | Description                                       |
+| ------------------ | ------------------------------------------------- |
+| **thulp-core**     | Core types and traits (`ToolDefinition`, etc.)    |
+| **thulp-mcp**      | MCP transport (STDIO/HTTP, tools, resources)      |
+| **thulp-adapter**  | OpenAPI v2/v3 to tool definition conversion       |
+| **thulp-registry** | Async thread-safe tool registry with tagging      |
 
 ### Feature Crates
 
-| Crate | Description |
-|-------|-------------|
-| **thulp-query** | Query DSL for searching and filtering tools |
-| **thulp-skills** | Multi-step tool workflow composition and execution |
-| **thulp-workspace** | Workspace and execution context management |
-| **thulp-browser** | Web fetching, HTML parsing, optional CDP support |
-| **thulp-guidance** | Template rendering and LLM guidance primitives |
+| Crate              | Description                                       |
+| ------------------ | ------------------------------------------------- |
+| **thulp-query**    | Query DSL for searching and filtering tools       |
+| **thulp-skills**   | Multi-step workflow composition and execution     |
+| **thulp-workspace**| Workspace and execution context management        |
+| **thulp-browser**  | Web fetching, HTML parsing, optional CDP support  |
+| **thulp-guidance** | Template rendering and LLM guidance primitives    |
 
 ### CLI
 
-| Crate | Description |
-|-------|-------------|
-| **thulp-cli** | Command-line interface with JSON output and shell completions |
+| Crate         | Description                                        |
+| ------------- | -------------------------------------------------- |
+| **thulp-cli** | CLI with JSON output and shell completions         |
 
 ## Installation
 
@@ -106,7 +116,11 @@ use thulp_mcp::McpClient;
 let client = McpClient::connect_http("server", "http://localhost:8080".to_string()).await?;
 
 // Or via STDIO
-let client = McpClient::connect_stdio("server", "path/to/mcp-server".to_string(), None).await?;
+let client = McpClient::connect_stdio(
+    "server",
+    "path/to/mcp-server".to_string(),
+    None
+).await?;
 
 // List available tools
 let tools = client.list_tools().await?;
@@ -260,11 +274,11 @@ cargo fmt --all -- --check
 
 ### Feature Flags
 
-| Crate | Flag | Description |
-|-------|------|-------------|
-| thulp-mcp | `ares` | Ares server integration |
-| thulp-browser | `cdp` | Chrome DevTools Protocol support |
-| thulp-examples | `mcp` | MCP example |
+| Crate          | Flag   | Description                       |
+| -------------- | ------ | --------------------------------- |
+| thulp-mcp      | `ares` | Ares server integration           |
+| thulp-browser  | `cdp`  | Chrome DevTools Protocol support  |
+| thulp-examples | `mcp`  | MCP example                       |
 
 ## Contributing
 
@@ -282,8 +296,8 @@ Contributions are welcome! Please follow these guidelines:
 
 Licensed under either of:
 
-- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
-- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
 
 at your option.
 
@@ -293,9 +307,10 @@ at your option.
 - [Crates.io](https://crates.io/search?q=thulp)
 - [Documentation](https://docs.rs/thulp-core)
 - [MCP Specification](https://modelcontextprotocol.io/)
-- [rs-utcp](https://github.com/anthropics/utcp-rs)
+- [rs-utcp](https://github.com/universal-tool-calling-protocol/rs-utcp)
 
 ## Acknowledgments
 
-- **rs-utcp**: MCP protocol implementation
+- **rs-utcp**: UTCP protocol implementation (includes MCP transport)
 - **Anthropic**: Model Context Protocol specification
+- **UTCP**: Universal Tool Calling Protocol
