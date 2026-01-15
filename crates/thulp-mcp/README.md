@@ -19,14 +19,14 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-thulp-mcp = "0.1"
+thulp-mcp = "0.2"
 ```
 
 For Ares server support:
 
 ```toml
 [dependencies]
-thulp-mcp = { version = "0.1", features = ["ares"] }
+thulp-mcp = { version = "0.2", features = ["ares"] }
 ```
 
 ## Usage
@@ -352,7 +352,7 @@ Enables integration with the Ares MCP server implementation:
 
 ```toml
 [dependencies]
-thulp-mcp = { version = "0.1", features = ["ares"] }
+thulp-mcp = { version = "0.2", features = ["ares"] }
 ```
 
 This feature:
