@@ -1,5 +1,10 @@
 # Thulp
 
+[![CI](https://github.com/dirmacs/thulp/actions/workflows/ci.yml/badge.svg)](https://github.com/dirmacs/thulp/actions/workflows/ci.yml)
+[![crates.io](https://img.shields.io/crates/v/thulp-core.svg)](https://crates.io/crates/thulp-core)
+[![docs.rs](https://docs.rs/thulp-core/badge.svg)](https://docs.rs/thulp-core)
+[![License](https://img.shields.io/crates/l/thulp-core.svg)](LICENSE-MIT)
+
 **Execution Context Engineering Platform for AI Agents**
 
 Thulp is a Rust-based toolkit for building AI agents with rich execution contexts. It provides abstractions for tool discovery, execution, workspace management, and integration with the Model Context Protocol (MCP).
@@ -11,131 +16,192 @@ Thulp enables AI agents to interact with external tools and services through a u
 ### Key Features
 
 - **Unified Tool Abstraction**: Consistent interface for defining, validating, and executing tools
-- **MCP Integration**: First-class support for Model Context Protocol via `rs-utcp`
+- **MCP Integration**: Full Model Context Protocol support via `rs-utcp` (tools, resources, prompts)
 - **Type-Safe Parameters**: Strongly-typed parameter validation with JSON Schema support
+- **Query DSL**: Powerful query language for filtering and searching tools
+- **Skill Workflows**: Compose multi-step tool workflows with variable interpolation
 - **Async by Design**: Built on `tokio` for efficient async execution
-- **Extensible Adapters**: Connect to various tool providers and execution environments
-- **Workspace Management**: Organize and manage execution contexts
-- **Browser Automation**: Built-in browser interaction capabilities
-- **Comprehensive Testing**: Edge-case coverage with property-based testing
-- **Performance Monitoring**: Criterion-based benchmarks for critical paths
+- **CLI with Shell Completions**: Full-featured CLI with JSON output and completions
+- **Browser Automation**: Web fetching and optional CDP support
+- **Comprehensive Testing**: 183 tests with edge-case coverage
 
 ## Architecture
 
-Thulp is organized as a Cargo workspace with the following crates:
+Thulp is organized as a Cargo workspace with 10 crates:
 
 ### Core Crates
 
-- **`thulp-core`**: Core types and traits (`Tool`, `Parameter`, `ToolDefinition`, `ToolCall`)
-- **`thulp-mcp`**: MCP transport implementation using `rs-utcp`
-- **`thulp-adapter`**: Adapter interfaces for connecting to different tool providers
-- **`thulp-registry`**: Tool registration and discovery
+| Crate | Description |
+|-------|-------------|
+| **thulp-core** | Core types and traits (`ToolDefinition`, `Parameter`, `ToolCall`, `Transport`) |
+| **thulp-mcp** | MCP transport implementation (STDIO/HTTP, tools, resources, prompts) |
+| **thulp-adapter** | OpenAPI v2/v3 to tool definition conversion |
+| **thulp-registry** | Async thread-safe tool registry with tagging |
 
 ### Feature Crates
 
-- **`thulp-workspace`**: Workspace and execution context management
-- **`thulp-skills`**: Pre-built skill definitions and utilities
-- **`thulp-browser`**: Browser automation and interaction
-- **`thulp-guidance`**: Agent guidance and decision-making primitives
-- **`thulp-query`**: Query and search capabilities
+| Crate | Description |
+|-------|-------------|
+| **thulp-query** | Query DSL for searching and filtering tools |
+| **thulp-skills** | Multi-step tool workflow composition and execution |
+| **thulp-workspace** | Workspace and execution context management |
+| **thulp-browser** | Web fetching, HTML parsing, optional CDP support |
+| **thulp-guidance** | Template rendering and LLM guidance primitives |
 
 ### CLI
 
-- **`thulp-cli`**: Command-line interface for tool execution and testing
+| Crate | Description |
+|-------|-------------|
+| **thulp-cli** | Command-line interface with JSON output and shell completions |
 
-## Getting Started
+## Installation
 
-### Prerequisites
+### Install CLI
 
-- Rust 1.75 or later
-- Cargo
+```bash
+cargo install thulp-cli
+```
 
-### Installation
-
-Add Thulp to your `Cargo.toml`:
+### Add as Dependency
 
 ```toml
 [dependencies]
-thulp-core = "0.1"
-thulp-mcp = "0.1"
+thulp-core = "0.2"
+thulp-mcp = "0.2"
+thulp-query = "0.2"
 ```
 
 For MCP with Ares server support:
 
 ```toml
 [dependencies]
-thulp-mcp = { version = "0.1", features = ["ares"] }
+thulp-mcp = { version = "0.2", features = ["ares"] }
 ```
 
-### Quick Start
+## Quick Start
 
-#### Defining a Tool
+### Defining a Tool
 
 ```rust
 use thulp_core::{ToolDefinition, Parameter, ParameterType};
 
-let tool = ToolDefinition::builder()
-    .name("search")
+let tool = ToolDefinition::builder("search")
     .description("Search for information")
     .parameter(
-        Parameter::builder()
-            .name("query")
+        Parameter::builder("query")
             .description("Search query")
-            .parameter_type(ParameterType::String)
+            .param_type(ParameterType::String)
             .required(true)
             .build()
     )
     .build();
 ```
 
-#### Connecting to an MCP Server
+### Connecting to an MCP Server
 
 ```rust
-use thulp_mcp::McpTransport;
+use thulp_mcp::McpClient;
 
-// Connect via STDIO
-let transport = McpTransport::stdio(
-    "path/to/server",
-    &["--arg1", "--arg2"],
-    None
-).await?;
+// Connect via HTTP
+let client = McpClient::connect_http("server", "http://localhost:8080".to_string()).await?;
 
-// Or via HTTPS
-let transport = McpTransport::https("https://mcp-server.example.com").await?;
+// Or via STDIO
+let client = McpClient::connect_stdio("server", "path/to/mcp-server".to_string(), None).await?;
 
 // List available tools
-let tools = transport.list_tools().await?;
+let tools = client.list_tools().await?;
 
 // Execute a tool
-let result = transport.call_tool("tool_name", json!({
-    "param": "value"
-})).await?;
+let result = client.call(&ToolCall::builder("tool_name")
+    .arg_str("param", "value")
+    .build()).await?;
 ```
 
-## MCP Integration
+### Query DSL
 
-Thulp provides comprehensive MCP support through the `thulp-mcp` crate:
+```rust
+use thulp_query::{parse_query, QueryBuilder};
 
-- **STDIO Transport**: Spawn and communicate with local MCP servers
-- **HTTPS Transport**: Connect to remote MCP servers over HTTPS
-- **Tool Discovery**: Automatic conversion from MCP tool schemas to Thulp `ToolDefinition`
-- **JSON-RPC Communication**: Low-level JSON-RPC 2.0 message handling via `rs-utcp`
-- **Schema Parsing**: Automatic parsing of MCP JSON Schema to Thulp parameter types
+// Parse natural language query
+let criteria = parse_query("name:search and min:2")?;
+let matches: Vec<_> = tools.iter().filter(|t| criteria.matches(t)).collect();
 
-### Supported MCP Features
+// Or use the builder
+let query = QueryBuilder::new()
+    .name("file")
+    .min_parameters(1)
+    .build();
+let results = query.execute(&tools);
+```
 
-- Tool listing (`tools/list`)
-- Tool execution (`tools/call`)
-- Connection management (connect/disconnect lifecycle)
-- Error handling and status reporting
+### Skill Workflows
 
-See [`crates/thulp-mcp/README.md`](crates/thulp-mcp/README.md) for detailed MCP usage.
+```rust
+use thulp_skills::{Skill, SkillStep};
 
-## Feature Flags
+let skill = Skill::new("search_and_summarize", "Search and summarize results")
+    .with_input("query")
+    .with_step(SkillStep {
+        name: "search".to_string(),
+        tool: "web_search".to_string(),
+        arguments: json!({"query": "{{query}}"}),
+        continue_on_error: false,
+    })
+    .with_step(SkillStep {
+        name: "summarize".to_string(),
+        tool: "summarize".to_string(),
+        arguments: json!({"text": "{{search.results}}"}),
+        continue_on_error: false,
+    });
+```
 
-### `thulp-mcp`
+## CLI Usage
 
-- **`ares`**: Enable Ares server integration (default: disabled)
+```bash
+# List tools
+thulp tools list
+thulp tools list --output json
+
+# Show tool details
+thulp tools show <tool-name>
+
+# Validate tool arguments
+thulp tools validate <tool-name> --args '{"param": "value"}'
+
+# Convert OpenAPI spec to tools
+thulp convert openapi spec.yaml --output tools.yaml
+
+# Run demo
+thulp demo
+
+# Generate shell completions
+thulp completions bash > ~/.local/share/bash-completion/completions/thulp
+thulp completions powershell >> $PROFILE
+```
+
+## Examples
+
+Thulp includes 6 comprehensive examples:
+
+```bash
+# Core tool types
+cargo run --example tool_definition
+
+# OpenAPI conversion
+cargo run --example adapter
+
+# MCP integration
+cargo run --example mcp --features mcp
+
+# Query DSL
+cargo run --example query
+
+# Skill workflows
+cargo run --example skills
+
+# Async registry
+cargo run --example registry
+```
 
 ## Development
 
@@ -145,95 +211,60 @@ See [`crates/thulp-mcp/README.md`](crates/thulp-mcp/README.md) for detailed MCP 
 # Build all crates
 cargo build --workspace
 
-# Build with MCP features
-cargo build -p thulp-mcp --features ares
+# Build with CDP feature
+cargo build -p thulp-browser --features cdp
 
 # Build in release mode
 cargo build --workspace --release
 ```
 
-### Examples
-
-Thulp includes several examples demonstrating key functionality:
-
-```bash
-# Run tool definition example
-cargo run --example tool_definition
-
-# Run MCP integration example (requires MCP feature)
-cargo run --example mcp --features mcp
-
-# Run OpenAPI adapter example
-cargo run --example adapter
-```
-
-See the [`examples/`](examples/) directory for detailed example code.
-
 ### Testing
 
 ```bash
-# Run all tests
+# Run all tests (183 tests)
 cargo test --workspace
 
-# Run tests for specific crate
-cargo test -p thulp-core
-
-# Run tests with output
+# Run with verbose output
 cargo test --workspace -- --nocapture
 ```
 
 ### Benchmarking
 
 ```bash
-# Run benchmarks for thulp-core
-cargo bench -p thulp-core
-
-# Run specific benchmark
 cargo bench -p thulp-core --bench tool_benchmarks
 ```
 
 ### Code Quality
 
 ```bash
-# Run clippy
-cargo clippy --workspace
-
-# Format code
-cargo fmt --all
-
-# Check formatting
+cargo clippy --workspace -- -D warnings
 cargo fmt --all -- --check
 ```
 
 ## Project Status
 
-**Version**: 0.1.0 (Early Development)
+**Version**: 0.2.0
 
-### Completed
+### Complete Features
 
 - Core tool abstraction and validation
-- MCP transport implementation (STDIO and HTTPS)
+- MCP transport (STDIO and HTTP) with tools, resources, prompts
 - Parameter type system with JSON Schema support
-- Comprehensive test coverage (86 tests)
-- Performance benchmarks for critical paths
-- Edge-case testing for MCP integration
+- Query DSL with wildcards and boolean operators
+- Skill workflows with variable interpolation
+- OpenAPI v2/v3 conversion (JSON and YAML)
+- CLI with JSON output and shell completions
+- Async thread-safe tool registry with tagging
+- Browser web fetching and HTML parsing
+- 183 tests with comprehensive coverage
 
-### In Progress
+### Feature Flags
 
-- Documentation improvements
-- Additional adapter implementations
-- Workspace management features
-
-### Planned
-
-- Resource management (MCP resources)
-- Prompt template support (MCP prompts)
-- Additional transport types
-- Plugin system for custom tool providers
-
-## Vendor Dependencies
-
-This project previously vendored `ares-server` from `github.com/dirmacs/ares` (commit `cd9d697`) to include necessary patches not yet available on crates.io. The vendor directory has been removed as of January 15, 2026. See `VENDOR.md` for historical details.
+| Crate | Flag | Description |
+|-------|------|-------------|
+| thulp-mcp | `ares` | Ares server integration |
+| thulp-browser | `cdp` | Chrome DevTools Protocol support |
+| thulp-examples | `mcp` | MCP example |
 
 ## Contributing
 
@@ -243,7 +274,7 @@ Contributions are welcome! Please follow these guidelines:
 2. Create a feature branch
 3. Write tests for new functionality
 4. Ensure all tests pass: `cargo test --workspace`
-5. Run clippy: `cargo clippy --workspace`
+5. Run clippy: `cargo clippy --workspace -- -D warnings`
 6. Format code: `cargo fmt --all`
 7. Submit a pull request
 
@@ -256,14 +287,15 @@ Licensed under either of:
 
 at your option.
 
-## Acknowledgments
-
-- **rs-utcp**: MCP protocol implementation by rs-utcp contributors
-- **Ares**: Server implementation from dirmacs/ares
-- **Anthropic**: Model Context Protocol specification
-
 ## Links
 
 - [Repository](https://github.com/dirmacs/thulp)
+- [Crates.io](https://crates.io/search?q=thulp)
+- [Documentation](https://docs.rs/thulp-core)
 - [MCP Specification](https://modelcontextprotocol.io/)
-- [rs-utcp](https://github.com/modelcontextprotocol/rs-utcp)
+- [rs-utcp](https://github.com/anthropics/utcp-rs)
+
+## Acknowledgments
+
+- **rs-utcp**: MCP protocol implementation
+- **Anthropic**: Model Context Protocol specification
