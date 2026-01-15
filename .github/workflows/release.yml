@@ -1,0 +1,119 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            archive: tar.gz
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+            archive: tar.gz
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            archive: tar.gz
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            archive: tar.gz
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            archive: zip
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-action@stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target }}
+
+      - name: Install musl tools (Linux)
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: sudo apt-get install -y musl-tools
+
+      - name: Build binary
+        run: cargo build --release --target ${{ matrix.target }} -p thulp-cli
+
+      - name: Create archive (Unix)
+        if: matrix.os != 'windows-latest'
+        run: |
+          mkdir -p dist
+          cp target/${{ matrix.target }}/release/thulp dist/
+          cp README.md LICENSE* dist/ 2>/dev/null || true
+          cd dist && tar -czvf ../thulp-${{ github.ref_name }}-${{ matrix.target }}.tar.gz *
+
+      - name: Create archive (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          mkdir dist
+          copy target\${{ matrix.target }}\release\thulp.exe dist\
+          copy README.md dist\ 2>nul
+          Compress-Archive -Path dist\* -DestinationPath thulp-${{ github.ref_name }}-${{ matrix.target }}.zip
+        shell: pwsh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: thulp-${{ matrix.target }}
+          path: thulp-${{ github.ref_name }}-${{ matrix.target }}.*
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/**/*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-crates:
+    name: Publish to crates.io
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-action@stable
+        with:
+          toolchain: stable
+
+      - name: Publish crates
+        run: |
+          cargo publish -p thulp-core --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || true
+          sleep 30
+          cargo publish -p thulp-query --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || true
+          cargo publish -p thulp-guidance --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || true
+          cargo publish -p thulp-browser --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || true
+          cargo publish -p thulp-registry --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || true
+          cargo publish -p thulp-adapter --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || true
+          cargo publish -p thulp-workspace --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || true
+          cargo publish -p thulp-mcp --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || true
+          sleep 30
+          cargo publish -p thulp-skills --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || true
+          cargo publish -p thulp-cli --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || true

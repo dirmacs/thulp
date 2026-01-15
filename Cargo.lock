@@ -7011,6 +7011,9 @@ dependencies = [
  "thulp-adapter",
  "thulp-core",
  "thulp-mcp",
+ "thulp-query",
+ "thulp-registry",
+ "thulp-skills",
  "tokio",
 ]
 
