@@ -1,6 +1,6 @@
 [package]
 name = "thulp-cli"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Dirmacs <contact@dirmacs.org>"]
 license = "MIT OR Apache-2.0"
@@ -13,9 +13,9 @@ name = "thulp"
 path = "src/main.rs"
 
 [dependencies]
-thulp-core = { version = "0.1.0" }
-thulp-mcp = { version = "0.1.0", optional = true }
-thulp-adapter = { version = "0.1.0" }
+thulp-core = { path = "../thulp-core", version = "0.2.0" }
+thulp-mcp = { path = "../thulp-mcp", version = "0.2.0", optional = true }
+thulp-adapter = { path = "../thulp-adapter", version = "0.2.0" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_yaml = "0.9"
