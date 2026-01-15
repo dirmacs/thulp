@@ -1,0 +1,31 @@
+# Git
+.git
+.gitignore
+.github
+
+# Build artifacts
+target/
+**/*.rs.bk
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Documentation
+*.md
+docs/
+CODE_REVIEW_SUMMARY.md
+IMPLEMENTATION_STATUS.md
+VENDOR.md
+
+# Test files
+tests/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Other
+repomix-output.xml
