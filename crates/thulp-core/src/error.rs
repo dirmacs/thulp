@@ -2,7 +2,7 @@
 
 use thiserror::Error;
 
-/// Result type alias using [`Error`].
+/// Result type alias using the [`Error`](enum@Error) enum.
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// Errors that can occur in thulp-core.
