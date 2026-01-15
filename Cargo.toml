@@ -4,13 +4,13 @@ resolver = "2"
 members = [
     "crates/thulp-core",
     "crates/thulp-query",
-    "crates/thulp-mcp",
     "crates/thulp-adapter",
     "crates/thulp-workspace",
-    "crates/thulp-skills",
     "crates/thulp-browser",
     "crates/thulp-guidance",
     "crates/thulp-registry",
+    "crates/thulp-mcp",
+    "crates/thulp-skills",
     "crates/thulp-cli",
     "examples",
 ]
