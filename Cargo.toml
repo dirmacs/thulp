@@ -87,7 +87,3 @@ debug = true
 
 [profile.test]
 debug = true
-
-# Patch ares-server to use local vendor during development
-[patch.crates-io]
-ares-server = { path = "vendor/ares-server" }
