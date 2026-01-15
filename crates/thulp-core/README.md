@@ -1,0 +1,204 @@
+# thulp-core
+
+Core types, traits, and error definitions for the Thulp execution context platform.
+
+## Overview
+
+This crate provides the foundational abstractions for defining, validating, and executing tools in AI agent environments. It includes type-safe parameter definitions, tool metadata, and extensible traits for implementing custom tool providers and transports.
+
+## Features
+
+- **Type-Safe Parameters**: Compile-time and runtime validation of tool parameters
+- **Builder Pattern**: Ergonomic API for constructing tool definitions
+- **JSON Serialization**: Full serde support for all types
+- **MCP Integration**: Parse MCP JSON Schema to Thulp parameter definitions
+- **Async Support**: Built on tokio for efficient async execution
+
+## Installation
+
+Add to your `Cargo.toml`:
+
+```toml
+[dependencies]
+thulp-core = "0.2"
+```
+
+## Core Types
+
+- `ToolDefinition`: Describes an available tool with its parameters and metadata
+- `ToolCall`: Represents a request to execute a specific tool with arguments
+- `ToolResult`: The result of a tool execution (success or failure)
+- `Parameter`: Defines a tool parameter with type information and validation rules
+- `ParameterType`: Strongly-typed parameter types (String, Integer, Number, Boolean, Array, Object)
+
+## MCP Types
+
+- `Resource`: MCP resource definition with URI, name, and metadata
+- `ResourceContents`: Content of a read resource (text or blob)
+- `Prompt`: MCP prompt definition with arguments
+- `PromptMessage`: Message in a rendered prompt
+
+## Traits
+
+- `Tool`: Trait for implementing executable tools
+- `Transport`: Trait for implementing tool transport layers (MCP, HTTP, gRPC)
+
+## Usage
+
+### Defining a Tool
+
+```rust
+use thulp_core::{ToolDefinition, Parameter, ParameterType};
+
+let tool = ToolDefinition::builder("read_file")
+    .description("Read contents of a file")
+    .parameter(
+        Parameter::builder("path")
+            .param_type(ParameterType::String)
+            .required(true)
+            .description("Path to the file to read")
+            .build()
+    )
+    .parameter(
+        Parameter::builder("encoding")
+            .param_type(ParameterType::String)
+            .default(serde_json::Value::String("utf-8".to_string()))
+            .description("File encoding")
+            .build()
+    )
+    .build();
+
+assert_eq!(tool.name, "read_file");
+assert_eq!(tool.parameters.len(), 2);
+```
+
+### Validating Tool Arguments
+
+```rust
+use thulp_core::{ToolDefinition, Parameter, ParameterType};
+use serde_json::json;
+
+let tool = ToolDefinition::builder("add")
+    .description("Add two numbers")
+    .parameter(
+        Parameter::builder("a")
+            .param_type(ParameterType::Number)
+            .required(true)
+            .build()
+    )
+    .parameter(
+        Parameter::builder("b")
+            .param_type(ParameterType::Number)
+            .required(true)
+            .build()
+    )
+    .build();
+
+// Valid arguments
+let args = json!({"a": 5.0, "b": 3.0});
+assert!(tool.validate_args(&args).is_ok());
+
+// Invalid - missing required parameter
+let args = json!({"a": 5.0});
+assert!(tool.validate_args(&args).is_err());
+```
+
+### Creating Tool Calls
+
+```rust
+use thulp_core::ToolCall;
+use serde_json::json;
+
+let call = ToolCall::builder("search")
+    .arg("query", json!("rust programming"))
+    .arg("max_results", json!(10))
+    .build();
+
+assert_eq!(call.tool, "search");
+```
+
+### Parsing MCP JSON Schema
+
+```rust
+use thulp_core::ToolDefinition;
+use serde_json::json;
+
+let schema = json!({
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string",
+            "description": "User name"
+        },
+        "age": {
+            "type": "integer",
+            "description": "User age"
+        }
+    },
+    "required": ["name"]
+});
+
+let params = ToolDefinition::parse_mcp_input_schema(&schema).unwrap();
+assert_eq!(params.len(), 2);
+```
+
+### Working with MCP Resources
+
+```rust
+use thulp_core::{Resource, ResourceContents};
+
+let resource = Resource::builder("file:///docs/readme.md", "readme.md")
+    .title("Project README")
+    .mime_type("text/markdown")
+    .description("Main project documentation")
+    .build();
+
+let contents = ResourceContents::text("file:///docs/readme.md", "# Project\n...");
+```
+
+## Error Handling
+
+All fallible operations return `Result<T, Error>`, where `Error` provides detailed error information:
+
+```rust
+use thulp_core::{ToolDefinition, Error, Parameter, ParameterType};
+use serde_json::json;
+
+let tool = ToolDefinition::builder("test")
+    .parameter(
+        Parameter::builder("required_param")
+            .param_type(ParameterType::String)
+            .required(true)
+            .build()
+    )
+    .build();
+
+match tool.validate_args(&json!({})) {
+    Ok(_) => println!("Valid!"),
+    Err(Error::MissingParameter(name)) => {
+        eprintln!("Missing required parameter: {}", name);
+    }
+    Err(e) => eprintln!("Other error: {}", e),
+}
+```
+
+## Testing
+
+```bash
+cargo test -p thulp-core
+```
+
+## Benchmarking
+
+```bash
+cargo bench -p thulp-core --bench tool_benchmarks
+```
+
+## License
+
+Licensed under either of:
+
+- Apache License, Version 2.0 ([LICENSE-APACHE](../../LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+- MIT license ([LICENSE-MIT](../../LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+at your option.
