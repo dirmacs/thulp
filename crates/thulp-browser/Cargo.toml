@@ -20,3 +20,11 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "2.0"
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+
+# CDP dependencies (optional)
+uuid = { version = "1.0", features = ["v4"], optional = true }
+base64 = { version = "0.22", optional = true }
+
+[features]
+default = []
+cdp = ["uuid", "base64"]

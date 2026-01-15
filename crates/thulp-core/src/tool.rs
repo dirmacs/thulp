@@ -93,7 +93,8 @@ impl ToolDefinition {
                     let param_type = if let Some(type_val) = prop.get("type") {
                         match type_val.as_str() {
                             Some("string") => ParameterType::String,
-                            Some("number") | Some("integer") => ParameterType::Integer,
+                            Some("integer") => ParameterType::Integer,
+                            Some("number") => ParameterType::Number,
                             Some("boolean") => ParameterType::Boolean,
                             Some("array") => ParameterType::Array,
                             Some("object") => ParameterType::Object,
@@ -724,7 +725,7 @@ mod tests {
         );
         assert_eq!(
             params.iter().find(|p| p.name == "num").unwrap().param_type,
-            ParameterType::Integer
+            ParameterType::Number
         );
         assert_eq!(
             params.iter().find(|p| p.name == "int").unwrap().param_type,

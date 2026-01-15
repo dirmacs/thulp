@@ -14,6 +14,13 @@
 //! - [`Parameter`]: Defines a tool parameter with type information and validation rules
 //! - [`ParameterType`]: Strongly-typed parameter types (String, Integer, Number, Boolean, Array, Object)
 //!
+//! ## MCP Types
+//!
+//! - [`Resource`]: MCP resource definition with URI, name, and metadata
+//! - [`ResourceContents`]: Content of a read resource (text or blob)
+//! - [`Prompt`]: MCP prompt definition with arguments
+//! - [`PromptMessage`]: Message in a rendered prompt
+//!
 //! ## Traits
 //!
 //! - [`Tool`]: Trait for implementing executable tools
@@ -132,6 +139,36 @@
 //! assert!(!params.iter().find(|p| p.name == "age").unwrap().required);
 //! ```
 //!
+//! ### Working with MCP Resources
+//!
+//! ```rust
+//! use thulp_core::{Resource, ResourceContents};
+//!
+//! let resource = Resource::builder("file:///docs/readme.md", "readme.md")
+//!     .title("Project README")
+//!     .mime_type("text/markdown")
+//!     .description("Main project documentation")
+//!     .build();
+//!
+//! let contents = ResourceContents::text("file:///docs/readme.md", "# Project\n...");
+//! ```
+//!
+//! ### Working with MCP Prompts
+//!
+//! ```rust
+//! use thulp_core::{Prompt, PromptArgument, PromptMessage, GetPromptResult};
+//!
+//! let prompt = Prompt::builder("code_review")
+//!     .title("Code Review")
+//!     .description("Review code for best practices")
+//!     .argument(PromptArgument::required("code", "Code to review"))
+//!     .build();
+//!
+//! let result = GetPromptResult::new(vec![
+//!     PromptMessage::user_text("Please review this code"),
+//! ]);
+//! ```
+//!
 //! ## Error Handling
 //!
 //! All fallible operations return [`Result<T, Error>`](Result), where [`Error`] provides
@@ -160,11 +197,17 @@
 //! ```
 
 mod error;
+mod mcp;
 mod parameter;
 mod tool;
 mod traits;
 
 pub use error::{Error, Result};
+pub use mcp::{
+    EmbeddedResource, GetPromptResult, Prompt, PromptArgument, PromptBuilder, PromptContent,
+    PromptListResult, PromptMessage, Resource, ResourceAnnotations, ResourceBuilder,
+    ResourceContents, ResourceListResult, ResourceTemplate, ResourceTemplateListResult,
+};
 pub use parameter::{Parameter, ParameterBuilder, ParameterType};
 pub use tool::{ToolCall, ToolCallBuilder, ToolDefinition, ToolDefinitionBuilder, ToolResult};
 pub use traits::{Tool, Transport};

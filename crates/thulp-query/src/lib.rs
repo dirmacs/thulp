@@ -7,6 +7,66 @@
 use serde::{Deserialize, Serialize};
 use thulp_core::ToolDefinition;
 
+/// Parse a natural language query into QueryCriteria
+pub fn parse_query(query: &str) -> Result<QueryCriteria> {
+    // Simple parser for demonstration
+    // In a real implementation, this would use a proper NLP library
+
+    let lower_query = query.to_lowercase();
+
+    if lower_query.contains("and") {
+        let parts: Vec<&str> = query.split(" and ").collect();
+        let criteria = parts
+            .into_iter()
+            .map(parse_single_criterion)
+            .collect::<std::result::Result<Vec<_>, _>>()?;
+        Ok(QueryCriteria::And(criteria))
+    } else if lower_query.contains("or") {
+        let parts: Vec<&str> = query.split(" or ").collect();
+        let criteria = parts
+            .into_iter()
+            .map(parse_single_criterion)
+            .collect::<std::result::Result<Vec<_>, _>>()?;
+        Ok(QueryCriteria::Or(criteria))
+    } else {
+        parse_single_criterion(query)
+    }
+}
+
+fn parse_single_criterion(criterion: &str) -> Result<QueryCriteria> {
+    let lower = criterion.to_lowercase();
+
+    if lower.starts_with("name:") {
+        let name = criterion[5..].trim();
+        Ok(QueryCriteria::Name(name.to_string()))
+    } else if lower.starts_with("has:") {
+        let param = criterion[4..].trim();
+        Ok(QueryCriteria::HasParameter(param.to_string()))
+    } else if lower.starts_with("min:") {
+        let count: usize = criterion[4..]
+            .trim()
+            .parse()
+            .map_err(|_| QueryError::Parse("Invalid number for min".to_string()))?;
+        Ok(QueryCriteria::MinParameters(count))
+    } else if lower.starts_with("max:") {
+        let count: usize = criterion[4..]
+            .trim()
+            .parse()
+            .map_err(|_| QueryError::Parse("Invalid number for max".to_string()))?;
+        Ok(QueryCriteria::MaxParameters(count))
+    } else if lower.starts_with("desc:") || lower.starts_with("description:") {
+        let desc = if lower.starts_with("desc:") {
+            criterion[5..].trim()
+        } else {
+            criterion[12..].trim()
+        };
+        Ok(QueryCriteria::Description(desc.to_string()))
+    } else {
+        // Default to name search
+        Ok(QueryCriteria::Name(criterion.to_string()))
+    }
+}
+
 /// Result type for query operations
 pub type Result<T> = std::result::Result<T, QueryError>;
 
@@ -269,5 +329,53 @@ mod tests {
 
         let results = query.execute(&tools);
         assert_eq!(results.len(), 2);
+    }
+
+    #[test]
+    fn test_parse_query_name() {
+        let criteria = parse_query("search").unwrap();
+        assert!(matches!(criteria, QueryCriteria::Name(_)));
+    }
+
+    #[test]
+    fn test_parse_query_with_prefix() {
+        let criteria = parse_query("name:search").unwrap();
+        assert!(matches!(criteria, QueryCriteria::Name(_)));
+    }
+
+    #[test]
+    fn test_parse_query_has_parameter() {
+        let criteria = parse_query("has:path").unwrap();
+        assert!(matches!(criteria, QueryCriteria::HasParameter(_)));
+    }
+
+    #[test]
+    fn test_parse_query_min_parameters() {
+        let criteria = parse_query("min:2").unwrap();
+        assert!(matches!(criteria, QueryCriteria::MinParameters(2)));
+    }
+
+    #[test]
+    fn test_parse_query_max_parameters() {
+        let criteria = parse_query("max:5").unwrap();
+        assert!(matches!(criteria, QueryCriteria::MaxParameters(5)));
+    }
+
+    #[test]
+    fn test_parse_query_description() {
+        let criteria = parse_query("desc:file").unwrap();
+        assert!(matches!(criteria, QueryCriteria::Description(_)));
+    }
+
+    #[test]
+    fn test_parse_query_and() {
+        let criteria = parse_query("name:search and has:query").unwrap();
+        assert!(matches!(criteria, QueryCriteria::And(_)));
+    }
+
+    #[test]
+    fn test_parse_query_or() {
+        let criteria = parse_query("name:search or name:find").unwrap();
+        assert!(matches!(criteria, QueryCriteria::Or(_)));
     }
 }

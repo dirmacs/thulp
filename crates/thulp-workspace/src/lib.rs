@@ -10,6 +10,9 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+use std::fs;
+use std::path::Path;
+
 /// Result type for workspace operations
 pub type Result<T> = std::result::Result<T, WorkspaceError>;
 
@@ -79,6 +82,24 @@ impl Workspace {
     /// Get metadata value
     pub fn get_metadata(&self, key: &str) -> Option<&String> {
         self.metadata.get(key)
+    }
+}
+
+impl Workspace {
+    /// Save the workspace to a JSON file
+    pub fn save_to_file<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+        let json = serde_json::to_string_pretty(self)
+            .map_err(|e| WorkspaceError::Serialization(e.to_string()))?;
+        fs::write(path, json).map_err(WorkspaceError::Io)?;
+        Ok(())
+    }
+
+    /// Load a workspace from a JSON file
+    pub fn load_from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
+        let json = fs::read_to_string(path).map_err(WorkspaceError::Io)?;
+        let workspace = serde_json::from_str(&json)
+            .map_err(|e| WorkspaceError::Serialization(e.to_string()))?;
+        Ok(workspace)
     }
 }
 
@@ -201,5 +222,26 @@ mod tests {
         manager.set_active("test").unwrap();
         assert!(manager.remove("test").is_some());
         assert!(manager.get_active().is_none());
+    }
+
+    #[test]
+    fn test_workspace_save_load() {
+        let workspace = Workspace::new("test", "Test Workspace", PathBuf::from("/tmp/test"))
+            .with_metadata("version", "1.0")
+            .with_context("key", serde_json::json!({"value": 42}));
+
+        let temp_file = tempfile::NamedTempFile::new().unwrap();
+        let path = temp_file.path();
+
+        // Save workspace
+        workspace.save_to_file(path).unwrap();
+
+        // Load workspace
+        let loaded = Workspace::load_from_file(path).unwrap();
+
+        assert_eq!(workspace.id, loaded.id);
+        assert_eq!(workspace.name, loaded.name);
+        assert_eq!(workspace.metadata, loaded.metadata);
+        assert_eq!(workspace.context, loaded.context);
     }
 }

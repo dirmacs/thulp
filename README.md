@@ -233,7 +233,7 @@ cargo fmt --all -- --check
 
 ## Vendor Dependencies
 
-This project currently vendors `ares-server` from `github.com/dirmacs/ares` (commit `cd9d697`) to include necessary patches not yet available on crates.io. See `VENDOR.md` for details on when and how to remove the vendor folder.
+This project previously vendored `ares-server` from `github.com/dirmacs/ares` (commit `cd9d697`) to include necessary patches not yet available on crates.io. The vendor directory has been removed as of January 15, 2026. See `VENDOR.md` for historical details.
 
 ## Contributing
 

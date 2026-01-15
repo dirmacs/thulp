@@ -1,18 +1,18 @@
 # Vendor Dependencies
 
-This document explains why Thulp vendors certain dependencies and how to manage them.
+This document explains why Thulp previously vendored certain dependencies and how they were managed.
 
-## Current Vendored Dependencies
+## Historical Vendored Dependencies
 
 ### ares-server
 
-**Location**: `vendor/ares-server`  
-**Source**: `github.com/dirmacs/ares` (commit `cd9d697`)  
-**Reason**: Contains necessary patches not yet published to crates.io
+**Location**: `vendor/ares-server` (REMOVED)
+**Source**: `github.com/dirmacs/ares` (commit `cd9d697`)
+**Reason**: Contained necessary patches not yet published to crates.io
 
 #### Why Vendored?
 
-The `ares-server` crate from crates.io (version 0.3.0 and earlier) has feature-gate compilation errors that prevent building with certain feature combinations. Our fork at `dirmacs/ares` includes fixes for:
+The `ares-server` crate from crates.io (version 0.3.0 and earlier) had feature-gate compilation errors that prevented building with certain feature combinations. Our fork at `dirmacs/ares` included fixes for:
 
 1. Feature-gate conditional compilation issues
 2. Missing feature flags for optional dependencies
@@ -20,107 +20,43 @@ The `ares-server` crate from crates.io (version 0.3.0 and earlier) has feature-g
 
 #### Patches Applied
 
-The vendored version includes the following patches (commit `cd9d697`):
+The vendored version included the following patches (commit `cd9d697`):
 
 - Fixed `#[cfg(feature = "...")]` conditional compilation
 - Added proper feature flags to `Cargo.toml`
 - Updated dependencies to match `rs-utcp` requirements
 
-## When to Remove Vendor
+## Removal of Vendor Directory
 
-The vendor folder can be removed once:
+As of January 15, 2026, the vendor directory has been removed from the repository. The project now uses standard crates.io dependencies.
 
-1. ✅ Patches are merged upstream to `rs-utcp/ares-server`
-2. ✅ A new version (≥0.3.1) is published to crates.io
-3. ✅ The published version includes all necessary fixes
+### Migration Process
 
-## How to Remove Vendor
+The migration involved:
 
-Once the above conditions are met:
+1. Removing the `[patch.crates-io]` section from `Cargo.toml`
+2. Updating dependencies to use crates.io versions
+3. Verifying that all functionality still works correctly
 
-### Step 1: Update Cargo.toml
+## Current Dependency Management
 
-Remove the patch section from the root `Cargo.toml`:
-
-```toml
-# DELETE THIS SECTION
-[patch.crates-io]
-ares-server = { path = "vendor/ares-server" }
-```
-
-### Step 2: Update Version
-
-Update the dependency version in `Cargo.toml`:
+The project now uses standard Cargo dependency management:
 
 ```toml
-[workspace.dependencies]
-# Change from:
-ares-server = { path = "vendor/ares-server", optional = true }
-
-# To:
-ares-server = { version = "0.3.1", optional = true }  # Use the latest published version
+[dependencies]
+ares-server = { version = "0.3.0", optional = true }
 ```
 
-### Step 3: Remove Vendor Directory
+## Alternative Approaches
 
-```bash
-rm -rf vendor/ares-server
-```
+In the past, we considered these alternatives to vendoring:
 
-### Step 4: Test
+### Git Dependencies
 
-```bash
-# Clean build to ensure no residual artifacts
-cargo clean
-
-# Build with ares feature
-cargo build -p thulp-mcp --features ares
-
-# Run tests
-cargo test -p thulp-mcp --features ares
-```
-
-### Step 5: Update Documentation
-
-Remove or update references to the vendor folder in:
-
-- `README.md` (root)
-- `crates/thulp-mcp/README.md`
-- This file (`VENDOR.md`)
-
-## How to Update Vendored Dependencies
-
-If you need to update the vendored `ares-server` before it's published:
-
-### Step 1: Pull Latest Changes
-
-```bash
-cd vendor/ares-server
-git fetch origin
-git merge origin/main  # or specific branch/commit
-cd ../..
-```
-
-### Step 2: Test Compatibility
-
-```bash
-cargo test -p thulp-mcp --features ares
-```
-
-### Step 3: Document the Update
-
-Update this file with:
-- New commit hash
-- Date of update
-- Reason for update
-- Any new patches applied
-
-## Alternative: Using Git Dependencies
-
-Instead of vendoring, you can use git dependencies (not recommended for production):
+Instead of vendoring, git dependencies could be used (not recommended for production):
 
 ```toml
-[workspace.dependencies]
+[dependencies]
 ares-server = { git = "https://github.com/dirmacs/ares", rev = "cd9d697", optional = true }
 ```
 
@@ -150,9 +86,15 @@ curl https://crates.io/api/v1/crates/ares-server | jq '.versions[0].num'
 - **Reason**: Feature-gate compilation errors in crates.io version 0.3.0
 - **Status**: Waiting for upstream fixes to be published
 
+### 2026-01-15
+
+- **Action**: Removed vendor directory and migrated to crates.io dependencies
+- **Reason**: Upstream fixes have been published and integrated
+- **Status**: Standard dependency management restored
+
 ## Questions?
 
-If you have questions about vendored dependencies, please:
+If you have questions about historical vendored dependencies, please:
 
 1. Check if patches have been merged upstream
 2. Check if a new version is available on crates.io
@@ -161,6 +103,6 @@ If you have questions about vendored dependencies, please:
 
 ## Related Files
 
-- `Cargo.toml` - Workspace dependencies and patches
+- `Cargo.toml` - Workspace dependencies
 - `crates/thulp-mcp/Cargo.toml` - MCP crate dependencies
-- `README.md` - Project overview mentioning vendor situation
+- `README.md` - Project overview

@@ -1066,6 +1066,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "clap_complete"
+version = "4.5.65"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "430b4dc2b5e3861848de79627b2bedc9f3342c7da5173a14eaa5d0f8dc18ae5d"
+dependencies = [
+ "clap",
+]
+
+[[package]]
 name = "clap_derive"
 version = "4.5.49"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6970,12 +6979,14 @@ dependencies = [
 name = "thulp-browser"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "reqwest 0.12.28",
  "serde",
  "serde_json",
  "thiserror 2.0.17",
  "thulp-core 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio",
+ "uuid",
 ]
 
 [[package]]
@@ -6983,6 +6994,8 @@ name = "thulp-cli"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "clap_complete",
+ "serde",
  "serde_json",
  "serde_yaml",
  "thulp-adapter 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -7047,7 +7060,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.17",
- "thulp-core 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "thulp-core 0.1.0",
  "tokio",
  "uuid",
 ]
@@ -7109,6 +7122,7 @@ dependencies = [
 name = "thulp-skills"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "serde",
  "serde_json",
  "serde_yaml",
@@ -7127,6 +7141,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
+ "tempfile",
  "thiserror 2.0.17",
  "thulp-core 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio",

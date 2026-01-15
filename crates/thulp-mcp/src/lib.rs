@@ -5,6 +5,12 @@
 //! This crate provides a thulp-specific wrapper around rs-utcp's MCP implementation,
 //! adding features like caching, session tracking, and error conversion.
 //!
+//! ## Features
+//!
+//! - **Tools**: List, cache, and call MCP tools
+//! - **Resources**: List, read, and subscribe to MCP resources
+//! - **Prompts**: List and render MCP prompts
+//!
 //! ## Example
 //!
 //! ```rust
@@ -18,17 +24,50 @@
 //! println!("Client connected: {}", client.is_connected());
 //! println!("Session ID: {}", client.session_id());
 //! ```
+//!
+//! ## Resources Example
+//!
+//! ```rust
+//! use thulp_mcp::ResourcesClient;
+//! use thulp_core::Resource;
+//!
+//! let resources = ResourcesClient::new();
+//!
+//! // Register a local resource
+//! resources.register(Resource::builder("file:///config.yaml", "config.yaml")
+//!     .mime_type("application/yaml")
+//!     .build());
+//! ```
+//!
+//! ## Prompts Example
+//!
+//! ```rust
+//! use thulp_mcp::PromptsClient;
+//! use thulp_core::{Prompt, PromptArgument};
+//!
+//! let prompts = PromptsClient::new();
+//!
+//! // Register a prompt
+//! prompts.register(Prompt::builder("code_review")
+//!     .description("Review code for best practices")
+//!     .argument(PromptArgument::required("code", "Code to review"))
+//!     .build());
+//! ```
 
 #[cfg(feature = "ares")]
 mod ares_integration;
 mod client;
 mod error;
+mod prompts;
+mod resources;
 mod transport;
 
 #[cfg(feature = "ares")]
 pub use ares_integration::{AresMcpClient, AresToolRegistry};
 pub use client::{McpClient, McpClientBuilder};
 pub use error::Result;
+pub use prompts::PromptsClient;
+pub use resources::ResourcesClient;
 pub use transport::McpTransport;
 
 #[cfg(test)]

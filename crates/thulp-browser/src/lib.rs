@@ -6,6 +6,36 @@
 //! - Web page fetching and parsing
 //! - HTML content extraction
 //! - Basic web scraping operations
+//! - CDP (Chrome DevTools Protocol) browser automation (feature-gated)
+//!
+//! ## Basic Web Fetching
+//!
+//! ```rust,no_run
+//! use thulp_browser::WebClient;
+//!
+//! # async fn example() -> Result<(), thulp_browser::BrowserError> {
+//! let client = WebClient::new();
+//! let page = client.fetch("https://example.com").await?;
+//! println!("Title: {:?}", page.title);
+//! println!("Text: {}", page.text());
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ## CDP Browser Automation (requires `cdp` feature)
+//!
+//! ```rust,ignore
+//! use thulp_browser::cdp::{Browser, BrowserConfig};
+//!
+//! # async fn example() -> Result<(), thulp_browser::BrowserError> {
+//! let config = BrowserConfig::new().headless(true);
+//! let browser = Browser::launch(config).await?;
+//! let page = browser.new_page().await?;
+//! page.navigate("https://example.com").await?;
+//! let screenshot = page.screenshot().await?;
+//! # Ok(())
+//! # }
+//! ```
 
 use serde::{Deserialize, Serialize};
 
@@ -23,6 +53,30 @@ pub enum BrowserError {
 
     #[error("Invalid URL: {0}")]
     InvalidUrl(String),
+
+    #[error("CDP connection error: {0}")]
+    CdpConnection(String),
+
+    #[error("CDP protocol error: {0}")]
+    CdpProtocol(String),
+
+    #[error("Browser launch failed: {0}")]
+    BrowserLaunch(String),
+
+    #[error("Page not found: {0}")]
+    PageNotFound(String),
+
+    #[error("Navigation failed: {0}")]
+    Navigation(String),
+
+    #[error("JavaScript evaluation failed: {0}")]
+    JavaScriptEval(String),
+
+    #[error("Screenshot capture failed: {0}")]
+    Screenshot(String),
+
+    #[error("Timeout: {0}")]
+    Timeout(String),
 }
 
 /// Web page content
@@ -136,6 +190,10 @@ fn strip_html_tags(html: &str) -> String {
     result
 }
 
+/// CDP browser automation module.
+#[cfg(feature = "cdp")]
+pub mod cdp;
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -172,5 +230,34 @@ mod tests {
     fn test_web_client_creation() {
         let _client = WebClient::new();
         assert!(true); // Just verify it can be created
+    }
+
+    #[test]
+    fn test_browser_error_display() {
+        let err = BrowserError::CdpConnection("failed to connect".to_string());
+        assert_eq!(err.to_string(), "CDP connection error: failed to connect");
+    }
+
+    #[test]
+    fn test_page_text() {
+        let page = Page::new(
+            "https://example.com".to_string(),
+            "<p>Hello</p><p>World</p>".to_string(),
+            200,
+        );
+        let text = page.text();
+        assert!(text.contains("Hello"));
+        assert!(text.contains("World"));
+    }
+
+    #[test]
+    fn test_page_len() {
+        let page = Page::new(
+            "https://example.com".to_string(),
+            "<p>Test</p>".to_string(),
+            200,
+        );
+        assert_eq!(page.len(), 11);
+        assert!(!page.is_empty());
     }
 }
