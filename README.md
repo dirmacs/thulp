@@ -24,7 +24,7 @@ and custom integrations.
 
 - **Unified Tool Abstraction**: Consistent interface for defining, validating,
   and executing tools
-- **MCP Integration**: Full Model Context Protocol support via `rs-utcp` UTCP
+- **MCP Integration**: Full Model Context Protocol support via the `rs-utcp`
   implementation (tools, resources, prompts)
 - **Type-Safe Parameters**: Strongly-typed parameter validation with JSON
   Schema support
@@ -54,7 +54,7 @@ Thulp is organized as a Cargo workspace with 10 crates:
 | ------------------ | ------------------------------------------------- |
 | **thulp-query**    | Query DSL for searching and filtering tools       |
 | **thulp-skills**   | Multi-step workflow composition and execution     |
-| **thulp-workspace**| Workspace and execution context management        |
+| **thulp-workspace** | Workspace and execution context management        |
 | **thulp-browser**  | Web fetching, HTML parsing, optional CDP support  |
 | **thulp-guidance** | Template rendering and LLM guidance primitives    |
 
@@ -313,4 +313,3 @@ at your option.
 
 - **rs-utcp**: UTCP protocol implementation (includes MCP transport)
 - **Anthropic**: Model Context Protocol specification
-- **UTCP**: Universal Tool Calling Protocol
