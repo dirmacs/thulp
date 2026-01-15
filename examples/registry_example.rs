@@ -2,9 +2,9 @@
 //!
 //! Run: `cargo run --example registry`
 
+use std::sync::Arc;
 use thulp_core::{Parameter, ToolDefinition};
 use thulp_registry::ToolRegistry;
-use std::sync::Arc;
 
 #[tokio::main]
 async fn main() {
@@ -45,9 +45,10 @@ async fn main() {
     // List all tools
     println!("All tools:");
     for tool in registry.list().await.unwrap() {
-        println!("  {} - {} ({} params)", 
-            tool.name, 
-            tool.description, 
+        println!(
+            "  {} - {} ({} params)",
+            tool.name,
+            tool.description,
             tool.parameters.len()
         );
     }
@@ -65,13 +66,13 @@ async fn main() {
     registry.tag("get_weather", "api").await.unwrap();
     registry.tag("search_web", "api").await.unwrap();
     registry.tag("read_file", "filesystem").await.unwrap();
-    
+
     // Find by tag
     println!("\nFind by tag 'api':");
     for tool in registry.find_by_tag("api").await.unwrap() {
         println!("  - {}", tool.name);
     }
-    
+
     println!("\nFind by tag 'filesystem':");
     for tool in registry.find_by_tag("filesystem").await.unwrap() {
         println!("  - {}", tool.name);
@@ -81,7 +82,7 @@ async fn main() {
     // Demonstrate thread-safety with concurrent access
     println!("Thread-safety demo:");
     let registry_clone = Arc::clone(&registry);
-    
+
     let handle = tokio::spawn(async move {
         let async_tool = ToolDefinition::builder("async_task")
             .description("Added from another task")
@@ -92,14 +93,17 @@ async fn main() {
 
     handle.await.unwrap();
     println!("  Registry now has {} tools", registry.count().await);
-    
+
     // Check if tool exists
-    println!("\n  Contains 'async_task': {}", registry.contains("async_task").await);
-    
+    println!(
+        "\n  Contains 'async_task': {}",
+        registry.contains("async_task").await
+    );
+
     // Unregister
     registry.unregister("async_task").await.unwrap();
     println!("  After unregister: {} tools", registry.count().await);
-    
+
     // Clear all
     registry.clear().await;
     println!("\n  After clear: {} tools", registry.count().await);

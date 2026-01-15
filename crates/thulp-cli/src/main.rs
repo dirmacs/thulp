@@ -184,7 +184,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn generate_completions(shell: Shell, dir: Option<PathBuf>) -> Result<(), Box<dyn std::error::Error>> {
+fn generate_completions(
+    shell: Shell,
+    dir: Option<PathBuf>,
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Cli::command();
     let bin_name = cmd.get_name().to_string();
 
@@ -209,7 +212,10 @@ fn generate_completions(shell: Shell, dir: Option<PathBuf>) -> Result<(), Box<dy
     Ok(())
 }
 
-async fn handle_tool_commands(command: ToolCommands, output: &Output) -> Result<(), Box<dyn std::error::Error>> {
+async fn handle_tool_commands(
+    command: ToolCommands,
+    output: &Output,
+) -> Result<(), Box<dyn std::error::Error>> {
     match command {
         ToolCommands::List => {
             let read_file = create_read_file_tool();
@@ -267,7 +273,11 @@ async fn handle_tool_commands(command: ToolCommands, output: &Output) -> Result<
                         "  {}: {} ({})",
                         param.name,
                         param.param_type.as_str(),
-                        if param.required { "required" } else { "optional" }
+                        if param.required {
+                            "required"
+                        } else {
+                            "optional"
+                        }
                     ));
                     if !param.description.is_empty() {
                         output.print_text(&format!("    Description: {}", param.description));
@@ -310,7 +320,10 @@ async fn handle_tool_commands(command: ToolCommands, output: &Output) -> Result<
 }
 
 #[cfg(feature = "mcp")]
-async fn handle_mcp_commands(command: McpCommands, output: &Output) -> Result<(), Box<dyn std::error::Error>> {
+async fn handle_mcp_commands(
+    command: McpCommands,
+    output: &Output,
+) -> Result<(), Box<dyn std::error::Error>> {
     match command {
         McpCommands::ConnectHttp { name, url } => {
             let transport = McpTransport::new_http(name.clone(), url.clone());
@@ -324,13 +337,21 @@ async fn handle_mcp_commands(command: McpCommands, output: &Output) -> Result<()
                     "session_id": client.session_id(),
                 }));
             } else {
-                output.print_text(&format!("Connecting to MCP server '{}' at {}...", name, url));
+                output.print_text(&format!(
+                    "Connecting to MCP server '{}' at {}...",
+                    name, url
+                ));
                 output.print_text(&format!("✅ Connected to MCP server '{}'", name));
                 output.print_text(&format!("   Session ID: {}", client.session_id()));
             }
         }
-        McpCommands::ConnectStdio { name, command, args } => {
-            let transport = McpTransport::new_stdio(name.clone(), command.clone(), Some(args.clone()));
+        McpCommands::ConnectStdio {
+            name,
+            command,
+            args,
+        } => {
+            let transport =
+                McpTransport::new_stdio(name.clone(), command.clone(), Some(args.clone()));
             let client = McpClient::new(transport);
 
             if output.is_json() {
@@ -342,7 +363,10 @@ async fn handle_mcp_commands(command: McpCommands, output: &Output) -> Result<()
                     "session_id": client.session_id(),
                 }));
             } else {
-                output.print_text(&format!("Connecting to MCP server '{}' via STDIO command '{}'...", name, command));
+                output.print_text(&format!(
+                    "Connecting to MCP server '{}' via STDIO command '{}'...",
+                    name, command
+                ));
                 output.print_text(&format!("✅ Connected to MCP server '{}'", name));
                 output.print_text(&format!("   Session ID: {}", client.session_id()));
             }
@@ -392,9 +416,15 @@ async fn handle_mcp_commands(command: McpCommands, output: &Output) -> Result<()
     Ok(())
 }
 
-fn handle_convert_commands(command: ConvertCommands, output: &Output) -> Result<(), Box<dyn std::error::Error>> {
+fn handle_convert_commands(
+    command: ConvertCommands,
+    output: &Output,
+) -> Result<(), Box<dyn std::error::Error>> {
     match command {
-        ConvertCommands::OpenApi { file, output: output_file } => {
+        ConvertCommands::OpenApi {
+            file,
+            output: output_file,
+        } => {
             let spec_content = std::fs::read_to_string(&file)?;
 
             let spec: serde_json::Value = if file
@@ -425,11 +455,18 @@ fn handle_convert_commands(command: ConvertCommands, output: &Output) -> Result<
                     })).collect::<Vec<_>>()
                 }));
             } else {
-                output.print_text(&format!("Converting OpenAPI spec from {}...", file.display()));
+                output.print_text(&format!(
+                    "Converting OpenAPI spec from {}...",
+                    file.display()
+                ));
                 output.print_text(&format!("Generated {} tool definitions", tools.len()));
 
                 for tool in &tools {
-                    output.print_text(&format!("  - {}: {} parameters", tool.name, tool.parameters.len()));
+                    output.print_text(&format!(
+                        "  - {}: {} parameters",
+                        tool.name,
+                        tool.parameters.len()
+                    ));
                 }
             }
 
@@ -439,7 +476,10 @@ fn handle_convert_commands(command: ConvertCommands, output: &Output) -> Result<
                     .map_err(|e| format!("Failed to generate config: {}", e))?;
                 std::fs::write(&output_path, config)?;
                 if !output.is_json() {
-                    output.print_text(&format!("✅ Configuration written to: {}", output_path.display()));
+                    output.print_text(&format!(
+                        "✅ Configuration written to: {}",
+                        output_path.display()
+                    ));
                 }
             }
 
@@ -540,7 +580,7 @@ async fn run_demo(output: &Output) -> Result<(), Box<dyn std::error::Error>> {
         let read_file_tool = create_read_file_tool();
         let valid_args = json!({ "path": "/etc/hosts" });
         let invalid_args = json!({ "path": 123 });
-        
+
         let tool_call = ToolCall::builder("read_file")
             .arg_str("path", "/tmp/example.txt")
             .arg_str("encoding", "utf-8")

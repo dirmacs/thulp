@@ -2,8 +2,8 @@
 //!
 //! Run: `cargo run --example skills`
 
-use thulp_skills::{Skill, SkillStep, SkillRegistry};
 use serde_json::json;
+use thulp_skills::{Skill, SkillRegistry, SkillStep};
 
 fn main() {
     println!("=== Thulp Skills Example ===\n");
@@ -56,9 +56,9 @@ fn main() {
 
     // Create a registry and register skills
     println!("\n--- Skill Registry ---\n");
-    
+
     let mut registry = SkillRegistry::new();
-    
+
     // Create and register multiple skills
     let fetch_skill = Skill::new("fetch_and_parse", "Fetch a URL and parse its content")
         .with_input("url")
@@ -74,7 +74,7 @@ fn main() {
             arguments: json!({"html": "{{fetch.body}}"}),
             continue_on_error: false,
         });
-    
+
     let analyze_skill = Skill::new("analyze_code", "Analyze source code quality")
         .with_input("file_path")
         .with_step(SkillStep {
@@ -95,14 +95,14 @@ fn main() {
     registry.register(analyze_skill);
 
     println!("Registered skills: {:?}", registry.list());
-    
+
     // Look up a skill
     if let Some(skill) = registry.get("fetch_and_parse") {
         println!("\nFound skill: {}", skill.name);
         println!("  Description: {}", skill.description);
         println!("  Steps: {}", skill.steps.len());
     }
-    
+
     // Unregister a skill
     registry.unregister("analyze_code");
     println!("\nAfter unregister: {:?}", registry.list());

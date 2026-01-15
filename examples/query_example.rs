@@ -37,21 +37,22 @@ fn main() {
 
     // Example 1: Using parse_query with natural language-like DSL
     println!("--- Parsing DSL queries ---\n");
-    
+
     let queries = vec![
-        "name:weather",           // Name contains "weather"
-        "name:*file*",            // Name contains "file" (wildcard)
-        "has:path",               // Has parameter named "path"
-        "min:2",                  // At least 2 parameters
-        "desc:file",              // Description contains "file"
-        "name:search and min:1",  // Combined with AND
+        "name:weather",          // Name contains "weather"
+        "name:*file*",           // Name contains "file" (wildcard)
+        "has:path",              // Has parameter named "path"
+        "min:2",                 // At least 2 parameters
+        "desc:file",             // Description contains "file"
+        "name:search and min:1", // Combined with AND
     ];
 
     for query_str in queries {
         println!("Query: '{}'", query_str);
         match parse_query(query_str) {
             Ok(criteria) => {
-                let matches: Vec<_> = tools.iter()
+                let matches: Vec<_> = tools
+                    .iter()
                     .filter(|t| criteria.matches(t))
                     .map(|t| &t.name)
                     .collect();
@@ -66,14 +67,14 @@ fn main() {
     // Example 2: Using QueryBuilder for programmatic queries
     println!("--- Using QueryBuilder ---\n");
 
-    let query = QueryBuilder::new()
-        .name("file")
-        .min_parameters(1)
-        .build();
+    let query = QueryBuilder::new().name("file").min_parameters(1).build();
 
     let results = query.execute(&tools);
     println!("Query: name contains 'file' AND min 1 parameter");
-    println!("Results: {:?}\n", results.iter().map(|t| &t.name).collect::<Vec<_>>());
+    println!(
+        "Results: {:?}\n",
+        results.iter().map(|t| &t.name).collect::<Vec<_>>()
+    );
 
     // Example 3: Using QueryCriteria directly
     println!("--- Using QueryCriteria ---\n");
@@ -82,15 +83,18 @@ fn main() {
         QueryCriteria::Name("weather".to_string()),
         QueryCriteria::Name("email".to_string()),
     ]);
-    
+
     let query = Query::new(criteria);
     let results = query.execute(&tools);
     println!("Query: name contains 'weather' OR 'email'");
-    println!("Results: {:?}\n", results.iter().map(|t| &t.name).collect::<Vec<_>>());
+    println!(
+        "Results: {:?}\n",
+        results.iter().map(|t| &t.name).collect::<Vec<_>>()
+    );
 
     // Example 4: Complex nested query
     println!("--- Complex Nested Query ---\n");
-    
+
     let criteria = QueryCriteria::And(vec![
         QueryCriteria::Or(vec![
             QueryCriteria::Name("file".to_string()),
@@ -98,9 +102,12 @@ fn main() {
         ]),
         QueryCriteria::Not(Box::new(QueryCriteria::MinParameters(2))),
     ]);
-    
+
     let query = Query::new(criteria);
     let results = query.execute(&tools);
     println!("Query: (name contains 'file' OR has 'path' param) AND NOT min 2 params");
-    println!("Results: {:?}", results.iter().map(|t| &t.name).collect::<Vec<_>>());
+    println!(
+        "Results: {:?}",
+        results.iter().map(|t| &t.name).collect::<Vec<_>>()
+    );
 }

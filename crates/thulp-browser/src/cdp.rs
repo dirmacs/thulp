@@ -141,7 +141,7 @@ impl Browser {
         // 1. Find or use the provided Chrome executable
         // 2. Launch the browser process with CDP enabled
         // 3. Connect via WebSocket
-        
+
         Ok(Self {
             config,
             pid: None,
@@ -274,7 +274,11 @@ impl CdpPage {
     }
 
     /// Execute JavaScript function.
-    pub async fn execute(&self, function: &str, args: Vec<serde_json::Value>) -> Result<serde_json::Value> {
+    pub async fn execute(
+        &self,
+        function: &str,
+        args: Vec<serde_json::Value>,
+    ) -> Result<serde_json::Value> {
         // In a real implementation, this would call Runtime.callFunctionOn
         Ok(serde_json::json!({
             "function": function,
@@ -370,7 +374,7 @@ pub struct Screenshot {
 impl Screenshot {
     /// Get the screenshot as base64.
     pub fn as_base64(&self) -> String {
-        use base64::{Engine as _, engine::general_purpose::STANDARD};
+        use base64::{engine::general_purpose::STANDARD, Engine as _};
         STANDARD.encode(&self.data)
     }
 
@@ -424,7 +428,12 @@ impl ScreenshotOptions {
 
     /// Set clip region.
     pub fn clip(mut self, x: u32, y: u32, width: u32, height: u32) -> Self {
-        self.clip = Some(ClipRect { x, y, width, height });
+        self.clip = Some(ClipRect {
+            x,
+            y,
+            width,
+            height,
+        });
         self
     }
 

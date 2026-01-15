@@ -43,16 +43,20 @@ impl PromptsClient {
     /// Get a rendered prompt with arguments.
     ///
     /// In a full implementation, this would call `prompts/get` on the MCP server.
-    pub async fn get(&self, name: &str, arguments: HashMap<String, String>) -> Result<GetPromptResult> {
+    pub async fn get(
+        &self,
+        name: &str,
+        arguments: HashMap<String, String>,
+    ) -> Result<GetPromptResult> {
         let renderers = self.renderers.read().unwrap();
-        
+
         if let Some(renderer) = renderers.get(name) {
             Ok(renderer(&arguments))
         } else {
             // Default: return a simple message
             let prompt = self.cache.read().unwrap().get(name).cloned();
             let description = prompt.and_then(|p| p.description);
-            
+
             Ok(GetPromptResult {
                 description,
                 messages: vec![PromptMessage::user_text(format!(
@@ -127,12 +131,12 @@ mod tests {
             .description("A greeting prompt")
             .argument(PromptArgument::required("name", "Person to greet"))
             .build();
-        
+
         client.register(prompt);
 
         let args = HashMap::from([("name".to_string(), "Alice".to_string())]);
         let result = client.get("greeting", args).await.unwrap();
-        
+
         assert_eq!(result.description, Some("A greeting prompt".to_string()));
     }
 
@@ -146,24 +150,20 @@ mod tests {
 
         client.register_with_renderer(prompt, |args| {
             let name = args.get("name").map(|s| s.as_str()).unwrap_or("World");
-            GetPromptResult::new(vec![
-                PromptMessage::user_text(format!("Hello, {}!", name)),
-            ])
+            GetPromptResult::new(vec![PromptMessage::user_text(format!("Hello, {}!", name))])
         });
 
         let args = HashMap::from([("name".to_string(), "Alice".to_string())]);
         let result = client.get("greeting", args).await.unwrap();
-        
+
         assert_eq!(result.messages.len(), 1);
     }
 
     #[tokio::test]
     async fn test_get_definition() {
         let client = PromptsClient::new();
-        let prompt = Prompt::builder("test")
-            .title("Test Prompt")
-            .build();
-        
+        let prompt = Prompt::builder("test").title("Test Prompt").build();
+
         client.register(prompt);
 
         let def = client.get_definition("test");
@@ -175,9 +175,9 @@ mod tests {
     async fn test_clear() {
         let client = PromptsClient::new();
         client.register(Prompt::new("test"));
-        
+
         client.clear();
-        
+
         assert!(client.list().await.unwrap().prompts.is_empty());
     }
 }

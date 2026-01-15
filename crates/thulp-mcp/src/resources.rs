@@ -156,7 +156,7 @@ mod tests {
     #[tokio::test]
     async fn test_subscribe_unsubscribe() {
         let client = ResourcesClient::new();
-        
+
         client.subscribe("file:///test.txt").await.unwrap();
         assert_eq!(client.subscriptions().len(), 1);
 

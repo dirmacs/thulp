@@ -139,7 +139,11 @@ impl ResourceContents {
     }
 
     /// Create blob resource contents.
-    pub fn blob(uri: impl Into<String>, data: impl Into<String>, mime_type: impl Into<String>) -> Self {
+    pub fn blob(
+        uri: impl Into<String>,
+        data: impl Into<String>,
+        mime_type: impl Into<String>,
+    ) -> Self {
         Self {
             uri: uri.into(),
             mime_type: Some(mime_type.into()),
@@ -241,10 +245,7 @@ impl PromptBuilder {
 
     /// Add an argument.
     pub fn argument(mut self, arg: PromptArgument) -> Self {
-        self.prompt
-            .arguments
-            .get_or_insert_with(Vec::new)
-            .push(arg);
+        self.prompt.arguments.get_or_insert_with(Vec::new).push(arg);
         self
     }
 
@@ -334,10 +335,7 @@ impl PromptMessage {
 #[serde(untagged)]
 pub enum PromptContent {
     /// Text content
-    Text {
-        r#type: String,
-        text: String,
-    },
+    Text { r#type: String, text: String },
     /// Image content
     Image {
         r#type: String,
@@ -512,7 +510,7 @@ mod tests {
         let resource = Resource::builder("file:///test.txt", "test.txt")
             .mime_type("text/plain")
             .build();
-        
+
         let json = serde_json::to_string(&resource).unwrap();
         let parsed: Resource = serde_json::from_str(&json).unwrap();
         assert_eq!(resource, parsed);
@@ -524,7 +522,7 @@ mod tests {
             .description("Test prompt")
             .argument(PromptArgument::required("input", "Input text"))
             .build();
-        
+
         let json = serde_json::to_string(&prompt).unwrap();
         let parsed: Prompt = serde_json::from_str(&json).unwrap();
         assert_eq!(prompt, parsed);
