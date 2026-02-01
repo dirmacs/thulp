@@ -4,6 +4,8 @@
 
 This roadmap outlines the phased development of Thulp with TDD/BDD methodology. The integration of **rs-utcp** significantly reduces development time for Phase 2 (MCP and Adapters).
 
+**Status**: Phases 1-3 COMPLETE. Phase 4-5 in progress.
+**Current Version**: 0.3.0 (released to crates.io)
 **Total Estimated Duration**: 14-16 weeks (reduced from original 19+ weeks due to rs-utcp)
 
 ## Development Principles
@@ -16,7 +18,7 @@ This roadmap outlines the phased development of Thulp with TDD/BDD methodology. 
 
 ---
 
-## Phase 1: Foundation (Weeks 1-3)
+## Phase 1: Foundation (Weeks 1-3) ✅ COMPLETE
 
 ### Goals
 - Establish project structure
@@ -26,22 +28,22 @@ This roadmap outlines the phased development of Thulp with TDD/BDD methodology. 
 ### Deliverables
 
 #### Week 1: Project Setup
-- [ ] Initialize Cargo workspace
-- [ ] Set up CI/CD (GitHub Actions)
-- [ ] Configure test infrastructure (unit, integration, BDD)
-- [ ] Create `thulp-core` crate skeleton
+- [x] Initialize Cargo workspace
+- [x] Set up CI/CD (GitHub Actions)
+- [x] Configure test infrastructure (unit, integration, BDD)
+- [x] Create `thulp-core` crate skeleton
 
 #### Week 2: Core Types
-- [ ] `ToolDefinition`, `ToolCall`, `ToolResult` types
-- [ ] `Error` types with `thiserror`
-- [ ] Core traits: `Tool`, `Transport`
-- [ ] Serialization with `serde`
+- [x] `ToolDefinition`, `ToolCall`, `ToolResult` types
+- [x] `Error` types with `thiserror`
+- [x] Core traits: `Tool`, `Transport`
+- [x] Serialization with `serde`
 
 #### Week 3: Query Engine Foundation
-- [ ] `thulp-query` crate setup
-- [ ] Parser foundation with `nom`
-- [ ] Basic operations: `.`, `.field`, `.[n]`
-- [ ] Pipe operator `|`
+- [x] `thulp-query` crate setup
+- [x] Parser foundation with `nom`
+- [x] Basic operations: `.`, `.field`, `.[n]`
+- [x] Pipe operator `|`
 
 ### Testing Focus
 ```
@@ -56,7 +58,7 @@ Unit tests: Parser tests for thulp-query
 
 ---
 
-## Phase 2: MCP & Adapters (Weeks 4-6)
+## Phase 2: MCP & Adapters (Weeks 4-6) ✅ COMPLETE
 
 ### Goals
 - Integrate rs-utcp for MCP protocol
@@ -66,24 +68,24 @@ Unit tests: Parser tests for thulp-query
 ### Deliverables
 
 #### Week 4: MCP Client (rs-utcp Integration)
-- [ ] `thulp-mcp` crate with rs-utcp dependency
-- [ ] `McpClient` wrapper around `rs_utcp::transports::mcp`
-- [ ] STDIO transport: `connect_stdio()`
-- [ ] Tool discovery: `list_tools()`
-- [ ] Tool execution: `call_tool()`
+- [x] `thulp-mcp` crate with rs-utcp dependency
+- [x] `McpClient` wrapper around `rs_utcp::transports::mcp`
+- [x] STDIO transport: `connect_stdio()`
+- [x] Tool discovery: `list_tools()`
+- [x] Tool execution: `call_tool()`
 
 #### Week 5: MCP Client (Continued)
-- [ ] SSE transport: `connect_sse()`
-- [ ] Resource access: `list_resources()`, `read_resource()`
-- [ ] Connection lifecycle management
-- [ ] Error handling and reconnection
+- [x] SSE transport: `connect_sse()`
+- [x] Resource access: `list_resources()`, `read_resource()`
+- [x] Connection lifecycle management
+- [x] Error handling and reconnection
 
 #### Week 6: Adapter Framework
-- [ ] `thulp-adapter` crate with rs-utcp dependency
-- [ ] `AdapterGenerator` wrapper around `rs_utcp::openapi::OpenApiConverter`
-- [ ] OpenAPI 3.x support
-- [ ] Auth configuration extraction
-- [ ] Adapter serialization to YAML
+- [x] `thulp-adapter` crate with rs-utcp dependency
+- [x] `AdapterGenerator` wrapper around `rs_utcp::openapi::OpenApiConverter`
+- [x] OpenAPI 3.x support
+- [x] Auth configuration extraction
+- [x] Adapter serialization to YAML
 
 ### rs-utcp Integration Points
 
@@ -128,7 +130,7 @@ Feature: Adapter Generation
 
 ---
 
-## Phase 3: Workspace & Skills (Weeks 7-10)
+## Phase 3: Workspace & Skills (Weeks 7-10) ✅ COMPLETE
 
 ### Goals
 - Project structure management
@@ -148,11 +150,11 @@ Feature: Adapter Generation
 - [x] SessionConfig with max_turns, max_entries, max_duration
 
 #### Week 8: Query Engine Completion
-- [ ] Array operations: `map()`, `select()`, `sort_by()`
-- [ ] Object construction: `{key: .value}`
-- [ ] Conditionals: `if-then-else`, `//`
-- [ ] String functions: `split()`, `join()`, `test()`
-- [ ] 98% jq compatibility target
+- [x] Array operations: `map()`, `select()`, `sort_by()`
+- [x] Object construction: `{key: .value}`
+- [x] Conditionals: `if-then-else`, `//`
+- [x] String functions: `split()`, `join()`, `test()`
+- [x] 98% jq compatibility target
 
 #### Week 9: Skills System Core
 - [x] `thulp-skills` crate
