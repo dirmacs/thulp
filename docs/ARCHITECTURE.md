@@ -18,11 +18,19 @@ Thulp is architected as a Rust workspace with multiple crates, each responsible 
 │ thulp-skills  │       │thulp-guidance │       │thulp-registry │
 │  (Workflows)  │       │    (Docs)     │       │   (Sharing)   │
 └───────────────┘       └───────────────┘       └───────────────┘
-        │                                               │
-        ▼                                               ▼
+        │                       │                       │
+        ▼                       │                       │
+┌───────────────┐               │                       │
+│thulp-skill-   │               │                       │
+│   files       │               │                       │
+│(SKILL.md Parse)               │                       │
+└───────────────┘               │                       │
+        │                       ▼                       ▼
+        └───────────────────────┼───────────────────────┘
+                                ▼
 ┌───────────────────────────────────────────────────────────────┐
 │                      thulp-workspace                           │
-│              (Project & Session Management)                    │
+│         (Project, Session & SessionManager)                    │
 └───────────────────────────────────────────────────────────────┘
         │                       │                       │
         ▼                       ▼                       ▼
@@ -79,6 +87,37 @@ pub fn execute(query: &Query, input: &Value) -> Result<Value>;
 
 **Dependencies**: `serde_json`, `nom` (parser combinators)
 
+#### `thulp-skill-files`
+SKILL.md file parsing and loading with YAML frontmatter support.
+
+```rust
+pub struct SkillFile {
+    pub metadata: SkillMetadata,
+    pub content: String,
+}
+
+pub struct SkillLoader { ... }
+pub struct SkillPreprocessor { ... }
+
+impl SkillFile {
+    pub fn parse(content: &str) -> Result<Self>;
+}
+
+impl SkillLoader {
+    pub fn new() -> Self;
+    pub fn with_scope(scope: SkillScope) -> Self;
+    pub fn load_from_directory(&self, dir: &Path) -> Result<Vec<SkillFile>>;
+}
+
+impl SkillPreprocessor {
+    pub fn process(&self, content: &str, variables: &HashMap<String, String>) -> String;
+}
+```
+
+**Skill Scopes**: `Global`, `Workspace`, `Project` (priority: Project > Workspace > Global)
+
+**Dependencies**: `serde`, `serde_yaml`, `thiserror`
+
 ### Protocol Layer
 
 #### `thulp-mcp`
@@ -125,6 +164,8 @@ Project structure and session management.
 ```rust
 pub struct Workspace { ... }
 pub struct Session { ... }
+pub struct SessionManager { ... }
+pub struct SessionConfig { ... }
 pub struct Project { ... }
 
 impl Workspace {
@@ -132,11 +173,32 @@ impl Workspace {
     pub fn load(path: &Path) -> Result<Self>;
     pub fn create_session(&self) -> Result<Session>;
 }
+
+impl Session {
+    pub fn new(id: SessionId, config: SessionConfig) -> Self;
+    pub fn turn_count(&self) -> usize;  // Count of conversation turns
+    pub fn add_entry(&mut self, entry: SessionEntry) -> Result<()>;
+    pub fn is_expired(&self) -> bool;
+}
+
+impl SessionManager {
+    pub fn new(workspace_path: &Path) -> Self;
+    pub async fn create(&self, config: SessionConfig) -> Result<Session>;
+    pub async fn load(&self, id: &SessionId) -> Result<Option<Session>>;
+    pub async fn save(&self, session: &Session) -> Result<()>;
+    pub async fn list(&self) -> Result<Vec<SessionId>>;
+    pub async fn delete(&self, id: &SessionId) -> Result<()>;
+}
 ```
+
+**SessionConfig Options**:
+- `max_turns` - Maximum conversation turns allowed
+- `max_entries` - Maximum entries in session
+- `max_duration` - Session timeout duration
 
 **Key Files Managed**:
 - `.thulp/config.yaml` - Workspace configuration
-- `.thulp/sessions/` - Session history
+- `.thulp/sessions/` - Session history (file-based persistence)
 - `.thulp/cache/` - Tool discovery cache
 - `.thulp/adapters/` - Generated adapters
 
@@ -149,8 +211,39 @@ Parameterized workflow definitions and execution.
 
 ```rust
 pub struct Skill { ... }
+pub struct SkillStep { ... }
 pub struct SkillParameter { ... }
-pub struct SkillExecution { ... }
+pub struct SkillResult { ... }
+pub struct StepResult { ... }
+pub struct ExecutionContext { ... }
+
+// SkillExecutor trait - pluggable execution strategies
+#[async_trait]
+pub trait SkillExecutor: Send + Sync {
+    async fn execute(&self, skill: &Skill, context: &mut ExecutionContext) -> Result<SkillResult, SkillError>;
+    async fn execute_step(&self, step: &SkillStep, context: &mut ExecutionContext) -> Result<StepResult, SkillError>;
+}
+
+// ExecutionHooks - lifecycle callbacks for observability
+pub trait ExecutionHooks: Send + Sync {
+    fn before_skill(&self, skill: &Skill, context: &ExecutionContext);
+    fn after_skill(&self, skill: &Skill, result: &SkillResult, context: &ExecutionContext);
+    fn before_step(&self, step: &SkillStep, step_index: usize, context: &ExecutionContext);
+    fn after_step(&self, step: &SkillStep, step_index: usize, result: &StepResult, context: &ExecutionContext);
+    fn on_retry(&self, step: &SkillStep, attempt: usize, error: &str, context: &ExecutionContext);
+    fn on_error(&self, error: &SkillError, context: &ExecutionContext);
+    fn on_timeout(&self, step: &SkillStep, duration_ms: u64, context: &ExecutionContext);
+}
+
+// DefaultSkillExecutor - standard implementation with timeout/retry
+pub struct DefaultSkillExecutor { ... }
+
+impl DefaultSkillExecutor {
+    pub fn new() -> Self;
+    pub fn with_hooks<H: ExecutionHooks + 'static>(self, hooks: H) -> Self;
+    pub fn with_default_timeout(self, timeout: Duration) -> Self;
+    pub fn with_default_retries(self, retries: u32) -> Self;
+}
 
 impl Skill {
     pub fn load(path: &Path) -> Result<Self>;
@@ -160,6 +253,11 @@ impl Skill {
 }
 ```
 
+**Built-in Hook Implementations**:
+- `NoOpHooks` - No-op implementation (default)
+- `TracingHooks` - Logs execution via `tracing` crate
+- `CompositeHooks` - Combines multiple hook implementations
+
 **Skill YAML Format**:
 ```yaml
 name: get-user-repos
@@ -168,16 +266,19 @@ parameters:
   - name: username
     type: string
     required: true
+timeout_ms: 30000  # Per-skill timeout
 steps:
   - tool: github.list_repos
     args:
       owner: "{{ username }}"
     output: repos
+    timeout_ms: 10000  # Per-step timeout
+    retries: 2         # Retry on failure
   - query: ".repos | map(.name)"
     output: repo_names
 ```
 
-**Dependencies**: `thulp-core`, `thulp-mcp`, `thulp-query`, `tera` (templating)
+**Dependencies**: `thulp-core`, `thulp-mcp`, `thulp-query`, `tera` (templating), `tokio`
 
 #### `thulp-browser`
 Browser automation via Playwright/Chrome DevTools Protocol.

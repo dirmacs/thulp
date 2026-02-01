@@ -30,6 +30,10 @@ and custom integrations.
   Schema support
 - **Query DSL**: Powerful query language for filtering and searching tools
 - **Skill Workflows**: Compose multi-step tool workflows with variable interpolation
+- **SkillExecutor Trait**: Pluggable execution strategies with timeout/retry support
+- **Execution Hooks**: Lifecycle callbacks for observability (before/after skill/step, on_error, on_retry, on_timeout)
+- **Session Management**: Persistent sessions with turn counting, configurable limits, and file-based storage
+- **SKILL.md Parsing**: Load skills from markdown files with YAML frontmatter and scope-based priority
 - **Async by Design**: Built on `tokio` for efficient async execution
 - **CLI with Shell Completions**: Full-featured CLI with JSON output and completions
 - **Browser Automation**: Web fetching and optional CDP support
@@ -37,7 +41,7 @@ and custom integrations.
 
 ## Architecture
 
-Thulp is organized as a Cargo workspace with 10 crates:
+Thulp is organized as a Cargo workspace with 11 crates:
 
 ### Core Crates
 
@@ -50,13 +54,14 @@ Thulp is organized as a Cargo workspace with 10 crates:
 
 ### Feature Crates
 
-| Crate              | Description                                       |
-| ------------------ | ------------------------------------------------- |
-| **thulp-query**    | Query DSL for searching and filtering tools       |
-| **thulp-skills**   | Multi-step workflow composition and execution     |
-| **thulp-workspace**| Workspace and execution context management        |
-| **thulp-browser**  | Web fetching, HTML parsing, optional CDP support  |
-| **thulp-guidance** | Template rendering and LLM guidance primitives    |
+| Crate                | Description                                       |
+| -------------------- | ------------------------------------------------- |
+| **thulp-query**      | Query DSL for searching and filtering tools       |
+| **thulp-skills**     | Multi-step workflow composition and execution     |
+| **thulp-skill-files**| SKILL.md file parsing with YAML frontmatter       |
+| **thulp-workspace**  | Workspace, session management, and persistence    |
+| **thulp-browser**    | Web fetching, HTML parsing, optional CDP support  |
+| **thulp-guidance**   | Template rendering and LLM guidance primitives    |
 
 ### CLI
 
@@ -266,6 +271,13 @@ cargo fmt --all -- --check
 - Parameter type system with JSON Schema support
 - Query DSL with wildcards and boolean operators
 - Skill workflows with variable interpolation
+- SkillExecutor trait with pluggable execution strategies
+- DefaultSkillExecutor with timeout and retry support
+- ExecutionHooks for lifecycle callbacks and observability
+- Session management with turn counting and persistence
+- SessionManager for file-based session storage
+- SKILL.md file parsing with YAML frontmatter (thulp-skill-files)
+- SkillLoader with scope-based priority (Global/Workspace/Project)
 - OpenAPI v2/v3 conversion (JSON and YAML)
 - CLI with JSON output and shell completions
 - Async thread-safe tool registry with tagging
