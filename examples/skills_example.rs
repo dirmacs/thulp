@@ -23,6 +23,8 @@ fn main() {
             "limit": "{{max_results}}"
         }),
         continue_on_error: false,
+        timeout_secs: None,
+        max_retries: None,
     })
     .with_step(SkillStep {
         name: "summarize".to_string(),
@@ -32,6 +34,8 @@ fn main() {
             "format": "bullet_points"
         }),
         continue_on_error: false,
+        timeout_secs: None,
+        max_retries: None,
     })
     .with_step(SkillStep {
         name: "notify".to_string(),
@@ -41,6 +45,8 @@ fn main() {
             "channel": "results"
         }),
         continue_on_error: true, // Continue even if notification fails
+        timeout_secs: None,
+        max_retries: None,
     });
 
     println!("Skill: {} - {}", skill.name, skill.description);
@@ -67,12 +73,16 @@ fn main() {
             tool: "http_get".to_string(),
             arguments: json!({"url": "{{url}}"}),
             continue_on_error: false,
+            timeout_secs: None,
+            max_retries: None,
         })
         .with_step(SkillStep {
             name: "parse".to_string(),
             tool: "html_parser".to_string(),
             arguments: json!({"html": "{{fetch.body}}"}),
             continue_on_error: false,
+            timeout_secs: None,
+            max_retries: None,
         });
 
     let analyze_skill = Skill::new("analyze_code", "Analyze source code quality")
@@ -82,12 +92,16 @@ fn main() {
             tool: "read_file".to_string(),
             arguments: json!({"path": "{{file_path}}"}),
             continue_on_error: false,
+            timeout_secs: None,
+            max_retries: None,
         })
         .with_step(SkillStep {
             name: "analyze".to_string(),
             tool: "code_analyzer".to_string(),
             arguments: json!({"code": "{{read.content}}"}),
             continue_on_error: false,
+            timeout_secs: None,
+            max_retries: None,
         });
 
     registry.register(skill);
