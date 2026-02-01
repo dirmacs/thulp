@@ -11,6 +11,7 @@ members = [
     "crates/thulp-registry",
     "crates/thulp-mcp",
     "crates/thulp-skills",
+    "crates/thulp-skill-files",
     "crates/thulp-cli",
     "examples",
 ]
@@ -32,6 +33,7 @@ thulp-mcp = { path = "crates/thulp-mcp" }
 thulp-adapter = { path = "crates/thulp-adapter" }
 thulp-workspace = { path = "crates/thulp-workspace" }
 thulp-skills = { path = "crates/thulp-skills" }
+thulp-skill-files = { path = "crates/thulp-skill-files" }
 thulp-browser = { path = "crates/thulp-browser" }
 thulp-guidance = { path = "crates/thulp-guidance" }
 thulp-registry = { path = "crates/thulp-registry" }
