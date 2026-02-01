@@ -24,6 +24,8 @@ serde_yaml = "0.9"
 tera = "1.20"
 thiserror = "2.0"
 async-trait = "0.1"
+tracing = "0.1"
+fastrand = "2.0"
 
 [features]
 default = []
