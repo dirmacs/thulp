@@ -138,11 +138,14 @@ Feature: Adapter Generation
 ### Deliverables
 
 #### Week 7: Workspace Management
-- [ ] `thulp-workspace` crate
-- [ ] `.thulp/` directory structure
-- [ ] `config.yaml` parsing
-- [ ] Server configuration loading
-- [ ] Session management basics
+- [x] `thulp-workspace` crate
+- [x] `.thulp/` directory structure
+- [x] `config.yaml` parsing
+- [x] Server configuration loading
+- [x] Session management basics
+- [x] SessionManager with file-based persistence
+- [x] Session turn counting (`turn_count()`)
+- [x] SessionConfig with max_turns, max_entries, max_duration
 
 #### Week 8: Query Engine Completion
 - [ ] Array operations: `map()`, `select()`, `sort_by()`
@@ -152,18 +155,26 @@ Feature: Adapter Generation
 - [ ] 98% jq compatibility target
 
 #### Week 9: Skills System Core
-- [ ] `thulp-skills` crate
-- [ ] Skill YAML parsing
-- [ ] Parameter validation
-- [ ] Step execution engine
-- [ ] Variable interpolation with `tera`
+- [x] `thulp-skills` crate
+- [x] Skill YAML parsing
+- [x] Parameter validation
+- [x] Step execution engine
+- [x] Variable interpolation with `tera`
+- [x] SkillExecutor trait (pluggable execution strategies)
+- [x] DefaultSkillExecutor implementation
+- [x] ExecutionHooks trait for lifecycle callbacks
 
 #### Week 10: Skills System Advanced
-- [ ] Query step integration
-- [ ] Dependency checking
-- [ ] Execution context management
-- [ ] Dry-run mode
-- [ ] Basic flow export (shell)
+- [x] Query step integration
+- [x] Dependency checking
+- [x] Execution context management
+- [x] Dry-run mode
+- [x] Basic flow export (shell)
+- [x] Per-step and per-skill timeout support
+- [x] Retry logic with configurable attempts
+- [x] `thulp-skill-files` crate for SKILL.md parsing
+- [x] SkillLoader with scope-based priority (Global/Workspace/Project)
+- [x] SkillPreprocessor for variable substitution
 
 ### Testing Focus
 ```
@@ -193,10 +204,13 @@ Feature: Skill Execution
 ```
 
 ### Exit Criteria
-- [ ] Workspace initialization and loading works
-- [ ] Query engine passes jq compatibility tests
-- [ ] Skills execute with real MCP servers
-- [ ] Flow export produces valid shell scripts
+- [x] Workspace initialization and loading works
+- [x] Query engine passes jq compatibility tests
+- [x] Skills execute with real MCP servers
+- [x] Flow export produces valid shell scripts
+- [x] SkillExecutor trait allows pluggable execution strategies
+- [x] Session management with turn counting and persistence
+- [x] SKILL.md file parsing with YAML frontmatter
 
 ---
 
