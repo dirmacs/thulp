@@ -138,7 +138,13 @@ where
     Fut: Future<Output = Result<T, E>>,
     E: std::fmt::Display + AsRef<dyn std::error::Error + 'static>,
 {
-    with_retry(config, operation_name, |e| is_error_retryable(e, config), operation).await
+    with_retry(
+        config,
+        operation_name,
+        |e| is_error_retryable(e, config),
+        operation,
+    )
+    .await
 }
 
 /// Calculate the delay before the next retry attempt.
@@ -191,7 +197,9 @@ where
     }
 
     // Check for server errors
-    if config.retryable_errors.contains(&RetryableError::ServerError)
+    if config
+        .retryable_errors
+        .contains(&RetryableError::ServerError)
         && (msg.contains("500")
             || msg.contains("502")
             || msg.contains("503")
@@ -344,17 +352,22 @@ mod tests {
             ..Default::default()
         };
 
-        let result = with_retry(&config, "test", |_: &String| true, || {
-            let attempts = Arc::clone(&attempts_clone);
-            async move {
-                let n = attempts.fetch_add(1, Ordering::SeqCst);
-                if n < 2 {
-                    Err("transient error".to_string())
-                } else {
-                    Ok("success")
+        let result = with_retry(
+            &config,
+            "test",
+            |_: &String| true,
+            || {
+                let attempts = Arc::clone(&attempts_clone);
+                async move {
+                    let n = attempts.fetch_add(1, Ordering::SeqCst);
+                    if n < 2 {
+                        Err("transient error".to_string())
+                    } else {
+                        Ok("success")
+                    }
                 }
-            }
-        })
+            },
+        )
         .await;
 
         assert!(result.is_ok());
@@ -373,15 +386,19 @@ mod tests {
             ..Default::default()
         };
 
-        let result: Result<(), RetryError<String>> =
-            with_retry(&config, "test", |_: &String| true, || {
+        let result: Result<(), RetryError<String>> = with_retry(
+            &config,
+            "test",
+            |_: &String| true,
+            || {
                 let attempts = Arc::clone(&attempts_clone);
                 async move {
                     attempts.fetch_add(1, Ordering::SeqCst);
                     Err("persistent error".to_string())
                 }
-            })
-            .await;
+            },
+        )
+        .await;
 
         assert!(result.is_err());
         let err = result.unwrap_err();
@@ -397,15 +414,19 @@ mod tests {
 
         let config = RetryConfig::default();
 
-        let result: Result<(), RetryError<String>> =
-            with_retry(&config, "test", |_: &String| false, || {
+        let result: Result<(), RetryError<String>> = with_retry(
+            &config,
+            "test",
+            |_: &String| false,
+            || {
                 let attempts = Arc::clone(&attempts_clone);
                 async move {
                     attempts.fetch_add(1, Ordering::SeqCst);
                     Err("non-retryable error".to_string())
                 }
-            })
-            .await;
+            },
+        )
+        .await;
 
         assert!(result.is_err());
         let err = result.unwrap_err();
