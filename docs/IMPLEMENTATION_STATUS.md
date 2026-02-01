@@ -1,13 +1,14 @@
 # Thulp Implementation Status
 
-**Last Updated**: January 15, 2026
+**Last Updated**: February 1, 2026
 
 ## Summary
 
-- **Total Tests**: 183 passing
+- **Total Tests**: 190+ passing
 - **Clippy**: Clean (no warnings)
 - **Build Status**: Successful
-- **Crates**: 10 crates in workspace
+- **Crates**: 11 crates in workspace (added thulp-skill-files)
+- **Latest Release**: v0.3.0 on crates.io
 
 ## Completed Work
 
@@ -60,6 +61,20 @@
 - ✅ Authentication config parsing (API key, HTTP, OAuth2)
 - ✅ Request body handling
 - ✅ YAML config generation
+
+### Phase 2.5: Reliability & Sessions (v0.3.0) - COMPLETE
+
+- ✅ `SkillExecutor` trait for pluggable execution strategies (DIR-46)
+- ✅ `DefaultSkillExecutor` implementation
+- ✅ `ExecutionHooks` trait with `NoOpHooks`, `TracingHooks`, `CompositeHooks`
+- ✅ Per-step and per-skill timeout support (DIR-47)
+- ✅ Retry logic with configurable attempts
+- ✅ `SessionManager` with file-based persistence (DIR-48)
+- ✅ Session turn counting via `turn_count()` (DIR-96)
+- ✅ `SessionConfig` with max_turns, max_entries, max_duration
+- ✅ `thulp-skill-files` crate for SKILL.md parsing
+- ✅ `SkillLoader` with scope-based priority (Global/Workspace/Project)
+- ✅ `SkillPreprocessor` for variable substitution
 
 ### Phase 3: Workspace & Skills - COMPLETE
 
@@ -163,4 +178,6 @@ cargo fmt --all
 
 ## Version History
 
+- **0.3.0** (February 2026): Reliability release - SkillExecutor trait, timeout/retry, session management
+- **0.2.0** (January 2026): MCP enhancements, skill file parsing
 - **0.1.0** (January 2026): Initial release with complete core functionality
