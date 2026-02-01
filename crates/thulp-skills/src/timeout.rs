@@ -111,12 +111,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_timeout_success() {
-        let result: Result<&str, TimeoutError<io::Error>> = with_timeout(
-            Duration::from_secs(1),
-            "test operation",
-            async { Ok("success") },
-        )
-        .await;
+        let result: Result<&str, TimeoutError<io::Error>> =
+            with_timeout(Duration::from_secs(1), "test operation", async {
+                Ok("success")
+            })
+            .await;
 
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), "success");
@@ -124,15 +123,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_timeout_fires() {
-        let result: Result<(), TimeoutError<io::Error>> = with_timeout(
-            Duration::from_millis(50),
-            "slow operation",
-            async {
+        let result: Result<(), TimeoutError<io::Error>> =
+            with_timeout(Duration::from_millis(50), "slow operation", async {
                 tokio::time::sleep(Duration::from_secs(10)).await;
                 Ok(())
-            },
-        )
-        .await;
+            })
+            .await;
 
         assert!(result.is_err());
         let err = result.unwrap_err();
@@ -143,12 +139,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_timeout_execution_error() {
-        let result: Result<(), TimeoutError<io::Error>> = with_timeout(
-            Duration::from_secs(1),
-            "failing operation",
-            async { Err(io::Error::new(io::ErrorKind::NotFound, "not found")) },
-        )
-        .await;
+        let result: Result<(), TimeoutError<io::Error>> =
+            with_timeout(Duration::from_secs(1), "failing operation", async {
+                Err(io::Error::new(io::ErrorKind::NotFound, "not found"))
+            })
+            .await;
 
         assert!(result.is_err());
         let err = result.unwrap_err();

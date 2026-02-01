@@ -37,9 +37,9 @@ pub enum TimeoutAction {
 impl Default for TimeoutConfig {
     fn default() -> Self {
         Self {
-            skill_timeout: Duration::from_secs(300),  // 5 minutes
-            step_timeout: Duration::from_secs(60),    // 1 minute
-            tool_timeout: Duration::from_secs(30),    // 30 seconds
+            skill_timeout: Duration::from_secs(300), // 5 minutes
+            step_timeout: Duration::from_secs(60),   // 1 minute
+            tool_timeout: Duration::from_secs(30),   // 30 seconds
             timeout_action: TimeoutAction::Fail,
         }
     }

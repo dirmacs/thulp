@@ -10,8 +10,42 @@
 //! - **Timeout Support**: Prevent hanging executions with configurable timeouts
 //! - **Retry Logic**: Handle transient failures with exponential backoff
 //! - **Context Propagation**: Pass results between steps using template variables
+//! - **Pluggable Execution**: Use [`SkillExecutor`] trait for custom execution strategies
+//! - **Lifecycle Hooks**: Observe execution with [`ExecutionHooks`]
+//!
+//! ## Example
+//!
+//! ```ignore
+//! use thulp_skills::{Skill, SkillStep, DefaultSkillExecutor, ExecutionContext, SkillExecutor};
+//!
+//! // Define a skill
+//! let skill = Skill::new("search_and_summarize", "Search and summarize results")
+//!     .with_input("query")
+//!     .with_step(SkillStep {
+//!         name: "search".to_string(),
+//!         tool: "web_search".to_string(),
+//!         arguments: json!({"query": "{{query}}"}),
+//!         ..Default::default()
+//!     })
+//!     .with_step(SkillStep {
+//!         name: "summarize".to_string(),
+//!         tool: "summarize".to_string(),
+//!         arguments: json!({"text": "{{search}}"}),
+//!         ..Default::default()
+//!     });
+//!
+//! // Execute with the default executor
+//! let executor = DefaultSkillExecutor::new(transport);
+//! let mut context = ExecutionContext::new()
+//!     .with_input("query", json!("rust async programming"));
+//!
+//! let result = executor.execute(&skill, &mut context).await?;
+//! ```
 
 pub mod config;
+pub mod default_executor;
+pub mod executor;
+pub mod hooks;
 pub mod retry;
 pub mod timeout;
 
@@ -25,6 +59,9 @@ use thulp_core::{ToolCall, Transport};
 pub use config::{
     BackoffStrategy, ExecutionConfig, RetryConfig, RetryableError, TimeoutAction, TimeoutConfig,
 };
+pub use default_executor::DefaultSkillExecutor;
+pub use executor::{ExecutionContext, SkillExecutor, StepResult};
+pub use hooks::{CompositeHooks, ExecutionHooks, NoOpHooks, TracingHooks};
 pub use retry::{calculate_delay, is_error_retryable, with_retry, RetryError};
 pub use timeout::{with_timeout, with_timeout_infallible, TimeoutError};
 
@@ -64,7 +101,7 @@ pub enum SkillError {
 }
 
 /// A step in a skill workflow
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SkillStep {
     /// Step name/identifier
     pub name: String,
@@ -73,6 +110,7 @@ pub struct SkillStep {
     pub tool: String,
 
     /// Arguments for the tool (can reference previous step outputs)
+    #[serde(default)]
     pub arguments: Value,
 
     /// Whether to continue on error
@@ -318,8 +356,7 @@ impl Skill {
             attempts += 1;
 
             // Execute with timeout
-            let result =
-                tokio::time::timeout(timeout, transport.call(tool_call)).await;
+            let result = tokio::time::timeout(timeout, transport.call(tool_call)).await;
 
             match result {
                 Ok(Ok(tool_result)) => {
@@ -601,8 +638,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_skill_execution_with_config() {
-        let transport = MockTransport::new()
-            .with_response("test_tool", ToolResult::success(serde_json::json!({"ok": true})));
+        let transport = MockTransport::new().with_response(
+            "test_tool",
+            ToolResult::success(serde_json::json!({"ok": true})),
+        );
 
         let skill = Skill::new("test_skill", "Test skill").with_step(SkillStep {
             name: "step1".to_string(),
@@ -724,8 +763,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_skill_continue_on_error() {
-        let transport = MockTransport::new()
-            .with_response("step2", ToolResult::success(serde_json::json!({"ok": true})));
+        let transport = MockTransport::new().with_response(
+            "step2",
+            ToolResult::success(serde_json::json!({"ok": true})),
+        );
 
         let skill = Skill::new("skill", "Skill with continue_on_error")
             .with_step(SkillStep {
