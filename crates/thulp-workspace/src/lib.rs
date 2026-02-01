@@ -4,6 +4,58 @@
 //!
 //! This crate provides functionality for managing agent workspaces,
 //! including context, state, and session persistence.
+//!
+//! ## Features
+//!
+//! - **Workspace Management**: Create, load, and manage workspaces with metadata and context
+//! - **Session Management**: Track conversation history, tool calls, and skill executions
+//! - **Turn Counting**: Monitor conversation turns with configurable limits
+//! - **Persistence**: File-based storage for sessions with in-memory caching
+//! - **Filtering**: Query sessions by status, type, tags, and timestamps
+//!
+//! ## Example
+//!
+//! ```ignore
+//! use thulp_workspace::{Workspace, SessionManager, SessionType, SessionFilter};
+//! use std::path::PathBuf;
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     // Create a workspace
+//!     let workspace = Workspace::new("my-workspace", "My Workspace", PathBuf::from("."));
+//!
+//!     // Create a session manager
+//!     let manager = SessionManager::new(&workspace).await?;
+//!
+//!     // Create a session
+//!     let session = manager.create_session("Chat Session", SessionType::Conversation {
+//!         purpose: "User assistance".to_string(),
+//!     }).await?;
+//!
+//!     // Add entries
+//!     manager.add_entry(
+//!         session.id(),
+//!         EntryType::UserMessage,
+//!         serde_json::json!({"text": "Hello!"}),
+//!     ).await?;
+//!
+//!     // Query sessions
+//!     let active_sessions = manager.find_by_status(SessionStatus::Active).await?;
+//!
+//!     Ok(())
+//! }
+//! ```
+
+pub mod filter;
+pub mod session;
+pub mod session_manager;
+
+pub use filter::SessionFilter;
+pub use session::{
+    EntryType, LimitAction, LimitCheck, LimitExceeded, Session, SessionConfig, SessionEntry,
+    SessionId, SessionMetadata, SessionStatus, SessionType, Timestamp,
+};
+pub use session_manager::SessionManager;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
