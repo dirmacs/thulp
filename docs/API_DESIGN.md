@@ -671,3 +671,230 @@ thulp flow export get-user-info --format bash --output get-user.sh
 chmod +x get-user.sh
 ./get-user.sh octocat
 ```
+
+---
+
+## Programmatic API
+
+### SkillExecutor Trait
+
+The `SkillExecutor` trait provides pluggable execution strategies for skills.
+
+```rust
+use thulp_skills::{SkillExecutor, Skill, SkillResult, SkillStep, StepResult, ExecutionContext, SkillError};
+use async_trait::async_trait;
+
+#[async_trait]
+pub trait SkillExecutor: Send + Sync {
+    /// Execute a complete skill
+    async fn execute(
+        &self,
+        skill: &Skill,
+        context: &mut ExecutionContext
+    ) -> Result<SkillResult, SkillError>;
+
+    /// Execute a single step
+    async fn execute_step(
+        &self,
+        step: &SkillStep,
+        context: &mut ExecutionContext
+    ) -> Result<StepResult, SkillError>;
+}
+```
+
+#### DefaultSkillExecutor
+
+The standard implementation with timeout and retry support:
+
+```rust
+use thulp_skills::{DefaultSkillExecutor, TracingHooks};
+use std::time::Duration;
+
+// Create executor with defaults
+let executor = DefaultSkillExecutor::new();
+
+// Or configure with options
+let executor = DefaultSkillExecutor::new()
+    .with_default_timeout(Duration::from_secs(30))
+    .with_default_retries(3)
+    .with_hooks(TracingHooks::new());
+
+// Execute a skill
+let result = executor.execute(&skill, &mut context).await?;
+```
+
+---
+
+### ExecutionHooks Trait
+
+Lifecycle callbacks for observing skill execution:
+
+```rust
+use thulp_skills::{ExecutionHooks, Skill, SkillStep, SkillResult, StepResult, SkillError, ExecutionContext};
+
+pub trait ExecutionHooks: Send + Sync {
+    /// Called before skill execution starts
+    fn before_skill(&self, skill: &Skill, context: &ExecutionContext);
+
+    /// Called after skill execution completes
+    fn after_skill(&self, skill: &Skill, result: &SkillResult, context: &ExecutionContext);
+
+    /// Called before each step
+    fn before_step(&self, step: &SkillStep, step_index: usize, context: &ExecutionContext);
+
+    /// Called after each step completes
+    fn after_step(&self, step: &SkillStep, step_index: usize, result: &StepResult, context: &ExecutionContext);
+
+    /// Called when a step is retried
+    fn on_retry(&self, step: &SkillStep, attempt: usize, error: &str, context: &ExecutionContext);
+
+    /// Called when an error occurs
+    fn on_error(&self, error: &SkillError, context: &ExecutionContext);
+
+    /// Called when a step times out
+    fn on_timeout(&self, step: &SkillStep, duration_ms: u64, context: &ExecutionContext);
+}
+```
+
+#### Built-in Implementations
+
+```rust
+use thulp_skills::{NoOpHooks, TracingHooks, CompositeHooks};
+
+// No-op (default) - does nothing
+let hooks = NoOpHooks;
+
+// Tracing - logs via tracing crate
+let hooks = TracingHooks::new();
+
+// Composite - combines multiple hooks
+let hooks = CompositeHooks::new()
+    .add(TracingHooks::new())
+    .add(MyCustomHooks::new());
+```
+
+---
+
+### Session Management
+
+Session and SessionManager for persistent conversation tracking:
+
+```rust
+use thulp_workspace::{Session, SessionManager, SessionConfig, SessionId};
+use std::time::Duration;
+use std::path::Path;
+
+// Configure session limits
+let config = SessionConfig {
+    max_turns: Some(50),
+    max_entries: Some(1000),
+    max_duration: Some(Duration::from_secs(3600)),
+};
+
+// Create a session
+let session = Session::new(SessionId::new(), config);
+
+// Track conversation turns
+println!("Turn count: {}", session.turn_count());
+
+// Check if session has expired
+if session.is_expired() {
+    println!("Session expired");
+}
+```
+
+#### SessionManager
+
+File-based session persistence:
+
+```rust
+use thulp_workspace::{SessionManager, SessionConfig};
+use std::path::Path;
+
+// Create manager for workspace
+let manager = SessionManager::new(Path::new(".thulp"));
+
+// Create and persist a session
+let session = manager.create(SessionConfig::default()).await?;
+let session_id = session.id().clone();
+
+// Save session state
+manager.save(&session).await?;
+
+// Load session later
+if let Some(session) = manager.load(&session_id).await? {
+    println!("Loaded session with {} turns", session.turn_count());
+}
+
+// List all sessions
+let sessions = manager.list().await?;
+
+// Delete a session
+manager.delete(&session_id).await?;
+```
+
+---
+
+### SKILL.md File Parsing
+
+The `thulp-skill-files` crate provides SKILL.md parsing with YAML frontmatter:
+
+```rust
+use thulp_skill_files::{SkillFile, SkillLoader, SkillPreprocessor, SkillScope};
+use std::path::Path;
+use std::collections::HashMap;
+
+// Parse a SKILL.md file
+let content = r#"---
+name: my-skill
+description: A sample skill
+version: 1.0.0
+---
+
+# My Skill
+
+This is the skill content with {{variable}} substitution.
+"#;
+
+let skill_file = SkillFile::parse(content)?;
+println!("Name: {}", skill_file.metadata.name);
+println!("Content: {}", skill_file.content);
+```
+
+#### SkillLoader
+
+Load skills from directories with scope-based priority:
+
+```rust
+use thulp_skill_files::{SkillLoader, SkillScope};
+use std::path::Path;
+
+// Load from project scope (highest priority)
+let loader = SkillLoader::with_scope(SkillScope::Project);
+let skills = loader.load_from_directory(Path::new("./skills"))?;
+
+// Load with default scope
+let loader = SkillLoader::new();
+let skills = loader.load_from_directory(Path::new("./skills"))?;
+
+// Scope priority: Project > Workspace > Global
+```
+
+#### SkillPreprocessor
+
+Variable substitution in skill content:
+
+```rust
+use thulp_skill_files::SkillPreprocessor;
+use std::collections::HashMap;
+
+let preprocessor = SkillPreprocessor::new();
+
+let mut variables = HashMap::new();
+variables.insert("username".to_string(), "octocat".to_string());
+variables.insert("repo".to_string(), "hello-world".to_string());
+
+let content = "Fetching repos for {{username}} in {{repo}}";
+let processed = preprocessor.process(content, &variables);
+// Result: "Fetching repos for octocat in hello-world"
+```
