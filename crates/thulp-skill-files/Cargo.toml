@@ -1,0 +1,37 @@
+[package]
+name = "thulp-skill-files"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "SKILL.md file parsing and loading for Thulp"
+rust-version.workspace = true
+
+[dependencies]
+# Internal crates - thulp-skill-files is standalone, no internal deps needed
+# thulp-core = { workspace = true }
+# thulp-skills = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+
+# Async runtime
+tokio = { workspace = true, features = ["process", "fs"] }
+
+# Regex for preprocessor
+regex = "1.10"
+
+# Directory walking
+walkdir = "2.5"
+
+# Home directory detection
+dirs = "5.0"
+
+[dev-dependencies]
+tempfile = "3.14"
