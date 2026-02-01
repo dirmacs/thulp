@@ -3,6 +3,17 @@
 //! Skill system for composing and executing complex tool workflows.
 //!
 //! Skills are predefined sequences of tool calls that accomplish higher-level tasks.
+//!
+//! ## Features
+//!
+//! - **Skill Composition**: Define multi-step workflows as skills
+//! - **Timeout Support**: Prevent hanging executions with configurable timeouts
+//! - **Retry Logic**: Handle transient failures with exponential backoff
+//! - **Context Propagation**: Pass results between steps using template variables
+
+pub mod config;
+pub mod retry;
+pub mod timeout;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -10,6 +21,12 @@ use std::collections::HashMap;
 use thulp_core::ToolResult;
 
 use thulp_core::{ToolCall, Transport};
+
+pub use config::{
+    BackoffStrategy, ExecutionConfig, RetryConfig, RetryableError, TimeoutAction, TimeoutConfig,
+};
+pub use retry::{calculate_delay, is_error_retryable, with_retry, RetryError};
+pub use timeout::{with_timeout, with_timeout_infallible, TimeoutError};
 
 #[cfg(test)]
 use async_trait::async_trait;
@@ -28,6 +45,22 @@ pub enum SkillError {
 
     #[error("Invalid configuration: {0}")]
     InvalidConfig(String),
+
+    #[error("Step '{step}' timed out after {duration:?}")]
+    StepTimeout {
+        step: String,
+        duration: std::time::Duration,
+    },
+
+    #[error("Skill timed out after {duration:?}")]
+    SkillTimeout { duration: std::time::Duration },
+
+    #[error("Step '{step}' failed after {attempts} attempts: {message}")]
+    RetryExhausted {
+        step: String,
+        attempts: usize,
+        message: String,
+    },
 }
 
 /// A step in a skill workflow
@@ -45,6 +78,14 @@ pub struct SkillStep {
     /// Whether to continue on error
     #[serde(default)]
     pub continue_on_error: bool,
+
+    /// Optional per-step timeout override (in seconds)
+    #[serde(default)]
+    pub timeout_secs: Option<u64>,
+
+    /// Optional per-step max retries override
+    #[serde(default)]
+    pub max_retries: Option<usize>,
 }
 
 /// A skill definition - a sequence of tool calls
@@ -95,11 +136,98 @@ impl Skill {
         transport: &T,
         input_args: &HashMap<String, serde_json::Value>,
     ) -> Result<SkillResult> {
+        self.execute_with_config(transport, input_args, &ExecutionConfig::default())
+            .await
+    }
+
+    /// Execute the skill with custom timeout and retry configuration.
+    ///
+    /// This method wraps each step execution with timeout and retry logic
+    /// based on the provided configuration. Per-step overrides in `SkillStep`
+    /// take precedence over the global configuration.
+    ///
+    /// # Arguments
+    ///
+    /// * `transport` - The transport to use for tool calls
+    /// * `input_args` - Input arguments for the skill
+    /// * `config` - Execution configuration for timeouts and retries
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use thulp_skills::{Skill, ExecutionConfig, TimeoutConfig, RetryConfig};
+    /// use std::time::Duration;
+    ///
+    /// let config = ExecutionConfig::new()
+    ///     .with_timeout(TimeoutConfig::new().with_step_timeout(Duration::from_secs(30)))
+    ///     .with_retry(RetryConfig::new().with_max_retries(2));
+    ///
+    /// let result = skill.execute_with_config(&transport, &args, &config).await?;
+    /// ```
+    pub async fn execute_with_config<T: Transport>(
+        &self,
+        transport: &T,
+        input_args: &HashMap<String, serde_json::Value>,
+        config: &ExecutionConfig,
+    ) -> Result<SkillResult> {
+        let skill_timeout = config.timeout.skill_timeout;
+
+        // Wrap entire execution in skill-level timeout
+        let result = tokio::time::timeout(skill_timeout, async {
+            self.execute_steps_with_config(transport, input_args, config)
+                .await
+        })
+        .await;
+
+        match result {
+            Ok(inner_result) => inner_result,
+            Err(_elapsed) => {
+                // Handle based on timeout action
+                match config.timeout.timeout_action {
+                    TimeoutAction::Fail => Err(SkillError::SkillTimeout {
+                        duration: skill_timeout,
+                    }),
+                    TimeoutAction::Skip | TimeoutAction::Partial => {
+                        // Return partial result - but we don't have one at skill level
+                        Ok(SkillResult {
+                            success: false,
+                            step_results: vec![],
+                            output: None,
+                            error: Some(format!("Skill timed out after {:?}", skill_timeout)),
+                        })
+                    }
+                }
+            }
+        }
+    }
+
+    /// Internal method to execute steps with config (used within skill timeout)
+    async fn execute_steps_with_config<T: Transport>(
+        &self,
+        transport: &T,
+        input_args: &HashMap<String, serde_json::Value>,
+        config: &ExecutionConfig,
+    ) -> Result<SkillResult> {
+        use std::time::Duration;
+
         let mut step_results = Vec::new();
         let mut context = input_args.clone();
 
         for step in &self.steps {
-            // Prepare arguments by substituting context variables
+            // Determine timeout for this step (per-step override or global)
+            let step_timeout = step
+                .timeout_secs
+                .map(Duration::from_secs)
+                .unwrap_or(config.timeout.step_timeout);
+
+            // Determine max retries for this step
+            let max_retries = step.max_retries.unwrap_or(config.retry.max_retries);
+            let step_retry_config = RetryConfig {
+                max_retries,
+                ..config.retry.clone()
+            };
+
+            // Prepare arguments
             let prepared_args = self.prepare_arguments(&step.arguments, &context)?;
 
             let tool_call = ToolCall {
@@ -107,7 +235,18 @@ impl Skill {
                 arguments: prepared_args,
             };
 
-            match transport.call(&tool_call).await {
+            // Execute with retry and timeout
+            let step_result = self
+                .execute_step_with_retry_timeout(
+                    transport,
+                    &tool_call,
+                    &step.name,
+                    step_timeout,
+                    &step_retry_config,
+                )
+                .await;
+
+            match step_result {
                 Ok(result) => {
                     step_results.push((step.name.clone(), result.clone()));
 
@@ -128,16 +267,30 @@ impl Skill {
                     }
                 }
                 Err(e) => {
-                    if !step.continue_on_error {
-                        return Ok(SkillResult {
-                            success: false,
-                            step_results,
-                            output: None,
-                            error: Some(e.to_string()),
-                        });
+                    if step.continue_on_error {
+                        // Continue on error
+                        step_results.push((step.name.clone(), ToolResult::failure(e.to_string())));
+                    } else {
+                        // Check timeout action for Skip/Partial behavior
+                        match &config.timeout.timeout_action {
+                            TimeoutAction::Skip => {
+                                step_results
+                                    .push((step.name.clone(), ToolResult::failure(e.to_string())));
+                                // Continue to next step
+                            }
+                            TimeoutAction::Partial => {
+                                return Ok(SkillResult {
+                                    success: false,
+                                    step_results,
+                                    output: None,
+                                    error: Some(e.to_string()),
+                                });
+                            }
+                            TimeoutAction::Fail => {
+                                return Err(e);
+                            }
+                        }
                     }
-                    // Continue on error
-                    step_results.push((step.name.clone(), ToolResult::failure(e.to_string())));
                 }
             }
         }
@@ -148,6 +301,81 @@ impl Skill {
             output: None,
             error: None,
         })
+    }
+
+    /// Execute a single step with timeout and retry
+    async fn execute_step_with_retry_timeout<T: Transport>(
+        &self,
+        transport: &T,
+        tool_call: &ToolCall,
+        step_name: &str,
+        timeout: std::time::Duration,
+        retry_config: &RetryConfig,
+    ) -> Result<ToolResult> {
+        let mut attempts = 0;
+
+        loop {
+            attempts += 1;
+
+            // Execute with timeout
+            let result =
+                tokio::time::timeout(timeout, transport.call(tool_call)).await;
+
+            match result {
+                Ok(Ok(tool_result)) => {
+                    // Success!
+                    return Ok(tool_result);
+                }
+                Ok(Err(e)) => {
+                    // Transport error - check if retryable
+                    let error_msg = e.to_string();
+
+                    if attempts > retry_config.max_retries
+                        || !is_error_retryable(&error_msg, retry_config)
+                    {
+                        return Err(SkillError::RetryExhausted {
+                            step: step_name.to_string(),
+                            attempts,
+                            message: error_msg,
+                        });
+                    }
+
+                    let delay = calculate_delay(retry_config, attempts);
+                    tracing::warn!(
+                        step = step_name,
+                        attempt = attempts,
+                        max_retries = retry_config.max_retries,
+                        delay_ms = delay.as_millis() as u64,
+                        error = %e,
+                        "Retrying step after error"
+                    );
+                    tokio::time::sleep(delay).await;
+                }
+                Err(_elapsed) => {
+                    // Timeout - check if retryable
+                    if attempts > retry_config.max_retries
+                        || !retry_config
+                            .retryable_errors
+                            .contains(&RetryableError::Timeout)
+                    {
+                        return Err(SkillError::StepTimeout {
+                            step: step_name.to_string(),
+                            duration: timeout,
+                        });
+                    }
+
+                    let delay = calculate_delay(retry_config, attempts);
+                    tracing::warn!(
+                        step = step_name,
+                        attempt = attempts,
+                        max_retries = retry_config.max_retries,
+                        delay_ms = delay.as_millis() as u64,
+                        "Retrying step after timeout"
+                    );
+                    tokio::time::sleep(delay).await;
+                }
+            }
+        }
     }
 
     /// Prepare arguments by substituting context variables
@@ -278,6 +506,7 @@ impl MockTransport {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::time::Duration;
 
     #[test]
     fn test_skill_creation() {
@@ -295,16 +524,22 @@ mod tests {
                 tool: "web_search".to_string(),
                 arguments: serde_json::json!({"query": "{{query}}"}),
                 continue_on_error: false,
+                timeout_secs: None,
+                max_retries: None,
             })
             .with_step(SkillStep {
                 name: "summarize".to_string(),
                 tool: "summarize".to_string(),
                 arguments: serde_json::json!({"text": "{{search.results}}"}),
                 continue_on_error: false,
+                timeout_secs: Some(30),
+                max_retries: Some(2),
             });
 
         assert_eq!(skill.inputs.len(), 1);
         assert_eq!(skill.steps.len(), 2);
+        assert_eq!(skill.steps[1].timeout_secs, Some(30));
+        assert_eq!(skill.steps[1].max_retries, Some(2));
     }
 
     #[test]
@@ -344,12 +579,16 @@ mod tests {
                 tool: "search".to_string(),
                 arguments: serde_json::json!({"query": "test query"}),
                 continue_on_error: false,
+                timeout_secs: None,
+                max_retries: None,
             })
             .with_step(SkillStep {
                 name: "summarize".to_string(),
                 tool: "summarize".to_string(),
                 arguments: serde_json::json!({"text": "summary text"}),
                 continue_on_error: false,
+                timeout_secs: None,
+                max_retries: None,
             });
 
         let input_args = HashMap::new();
@@ -358,5 +597,199 @@ mod tests {
         assert!(result.success);
         assert_eq!(result.step_results.len(), 2);
         assert!(result.output.is_some());
+    }
+
+    #[tokio::test]
+    async fn test_skill_execution_with_config() {
+        let transport = MockTransport::new()
+            .with_response("test_tool", ToolResult::success(serde_json::json!({"ok": true})));
+
+        let skill = Skill::new("test_skill", "Test skill").with_step(SkillStep {
+            name: "step1".to_string(),
+            tool: "test_tool".to_string(),
+            arguments: serde_json::json!({}),
+            continue_on_error: false,
+            timeout_secs: None,
+            max_retries: None,
+        });
+
+        let config = ExecutionConfig::new()
+            .with_timeout(TimeoutConfig::new().with_step_timeout(Duration::from_secs(10)))
+            .with_retry(RetryConfig::no_retries());
+
+        let result = skill
+            .execute_with_config(&transport, &HashMap::new(), &config)
+            .await
+            .unwrap();
+
+        assert!(result.success);
+        assert_eq!(result.step_results.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_skill_step_timeout() {
+        // Create a transport that delays response
+        struct SlowTransport;
+
+        #[async_trait]
+        impl Transport for SlowTransport {
+            async fn connect(&mut self) -> thulp_core::Result<()> {
+                Ok(())
+            }
+            async fn disconnect(&mut self) -> thulp_core::Result<()> {
+                Ok(())
+            }
+            fn is_connected(&self) -> bool {
+                true
+            }
+            async fn list_tools(&self) -> thulp_core::Result<Vec<thulp_core::ToolDefinition>> {
+                Ok(vec![])
+            }
+            async fn call(&self, _call: &ToolCall) -> thulp_core::Result<ToolResult> {
+                tokio::time::sleep(Duration::from_secs(10)).await;
+                Ok(ToolResult::success(serde_json::json!({})))
+            }
+        }
+
+        let skill = Skill::new("slow_skill", "Slow skill").with_step(SkillStep {
+            name: "slow_step".to_string(),
+            tool: "slow_tool".to_string(),
+            arguments: serde_json::json!({}),
+            continue_on_error: false,
+            timeout_secs: None,
+            max_retries: None,
+        });
+
+        let config = ExecutionConfig::new()
+            .with_timeout(TimeoutConfig::new().with_step_timeout(Duration::from_millis(50)))
+            .with_retry(RetryConfig::no_retries());
+
+        let result = skill
+            .execute_with_config(&SlowTransport, &HashMap::new(), &config)
+            .await;
+
+        assert!(result.is_err());
+        match result {
+            Err(SkillError::StepTimeout { step, .. }) => {
+                assert_eq!(step, "slow_step");
+            }
+            _ => panic!("Expected StepTimeout error"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_skill_step_per_step_timeout_override() {
+        struct SlowTransport;
+
+        #[async_trait]
+        impl Transport for SlowTransport {
+            async fn connect(&mut self) -> thulp_core::Result<()> {
+                Ok(())
+            }
+            async fn disconnect(&mut self) -> thulp_core::Result<()> {
+                Ok(())
+            }
+            fn is_connected(&self) -> bool {
+                true
+            }
+            async fn list_tools(&self) -> thulp_core::Result<Vec<thulp_core::ToolDefinition>> {
+                Ok(vec![])
+            }
+            async fn call(&self, _call: &ToolCall) -> thulp_core::Result<ToolResult> {
+                tokio::time::sleep(Duration::from_millis(100)).await;
+                Ok(ToolResult::success(serde_json::json!({})))
+            }
+        }
+
+        let skill = Skill::new("skill", "Skill with per-step timeout").with_step(SkillStep {
+            name: "step".to_string(),
+            tool: "tool".to_string(),
+            arguments: serde_json::json!({}),
+            continue_on_error: false,
+            timeout_secs: Some(1), // Override: 1 second should be enough
+            max_retries: Some(0),
+        });
+
+        // Global config has very short timeout, but step overrides it
+        let config = ExecutionConfig::new()
+            .with_timeout(TimeoutConfig::new().with_step_timeout(Duration::from_millis(10)));
+
+        let result = skill
+            .execute_with_config(&SlowTransport, &HashMap::new(), &config)
+            .await;
+
+        // Should succeed because per-step timeout (1s) overrides global (10ms)
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_skill_continue_on_error() {
+        let transport = MockTransport::new()
+            .with_response("step2", ToolResult::success(serde_json::json!({"ok": true})));
+
+        let skill = Skill::new("skill", "Skill with continue_on_error")
+            .with_step(SkillStep {
+                name: "step1".to_string(),
+                tool: "missing_tool".to_string(),
+                arguments: serde_json::json!({}),
+                continue_on_error: true, // Continue even if this fails
+                timeout_secs: None,
+                max_retries: Some(0),
+            })
+            .with_step(SkillStep {
+                name: "step2".to_string(),
+                tool: "step2".to_string(),
+                arguments: serde_json::json!({}),
+                continue_on_error: false,
+                timeout_secs: None,
+                max_retries: None,
+            });
+
+        let config = ExecutionConfig::new().with_retry(RetryConfig::no_retries());
+
+        let result = skill
+            .execute_with_config(&transport, &HashMap::new(), &config)
+            .await
+            .unwrap();
+
+        // Should complete because continue_on_error=true for step1
+        assert!(result.success);
+        assert_eq!(result.step_results.len(), 2);
+
+        // First step should have failed
+        let (_, step1_result) = &result.step_results[0];
+        assert!(!step1_result.is_success());
+
+        // Second step should have succeeded
+        let (_, step2_result) = &result.step_results[1];
+        assert!(step2_result.is_success());
+    }
+
+    #[test]
+    fn test_skill_step_serialization() {
+        let step = SkillStep {
+            name: "test".to_string(),
+            tool: "tool".to_string(),
+            arguments: serde_json::json!({}),
+            continue_on_error: false,
+            timeout_secs: Some(30),
+            max_retries: Some(2),
+        };
+
+        let json = serde_json::to_string(&step).unwrap();
+        let deserialized: SkillStep = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(deserialized.timeout_secs, Some(30));
+        assert_eq!(deserialized.max_retries, Some(2));
+    }
+
+    #[test]
+    fn test_skill_step_default_optional_fields() {
+        let json = r#"{"name": "test", "tool": "tool", "arguments": {}}"#;
+        let step: SkillStep = serde_json::from_str(json).unwrap();
+
+        assert!(!step.continue_on_error);
+        assert_eq!(step.timeout_secs, None);
+        assert_eq!(step.max_retries, None);
     }
 }
