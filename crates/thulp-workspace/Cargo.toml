@@ -1,6 +1,6 @@
 [package]
 name = "thulp-workspace"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Dirmacs <contact@dirmacs.org>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/dirmacs/thulp"
@@ -14,7 +14,7 @@ name = "thulp_workspace"
 path = "src/lib.rs"
 
 [dependencies]
-thulp-core = { path = "../thulp-core", version = "0.2.0" }
+thulp-core = { path = "../thulp-core", version = "0.3.0" }
 tokio = { version = "1.43", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"
