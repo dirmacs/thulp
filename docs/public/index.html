@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Thulp — Execution Context Engineering for AI Agents</title>
+    <link rel="icon" type="image/svg+xml" href="https://dirmacs.github.io/thulp/img/thulp-logo.svg">
+    <style>
+        :root { --bg: #0d1117; --fg: #c9d1d9; --accent: #58a6ff; --card: #161b22; --border: #30363d; --dim: #8b949e; --red: #e94560; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--fg); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; }
+        .hero { text-align: center; padding: 4rem 1rem 2rem; }
+        .hero img { width: 96px; margin-bottom: 1rem; }
+        .hero h1 { font-size: 2.5rem; color: #fff; margin-bottom: 0.5rem; }
+        .hero p { color: var(--dim); font-size: 1.1rem; max-width: 640px; margin: 0 auto 1.5rem; }
+        .badges { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem; }
+        .badges img { height: 20px; }
+        .install { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.5rem; max-width: 400px; margin: 0 auto 3rem; font-family: monospace; font-size: 0.95rem; color: var(--accent); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; max-width: 960px; margin: 0 auto; padding: 0 1rem 3rem; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; }
+        .card h3 { color: #fff; margin-bottom: 0.5rem; }
+        .card p { color: var(--dim); font-size: 0.9rem; }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.85rem; }
+        th, td { padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border); }
+        th { color: var(--accent); }
+        .section { max-width: 960px; margin: 0 auto; padding: 0 1rem 3rem; }
+        .section h2 { color: #fff; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+        code { background: var(--card); padding: 0.1em 0.4em; border-radius: 3px; font-size: 0.85rem; }
+        pre { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; overflow-x: auto; margin: 1rem 0; }
+        pre code { background: none; padding: 0; }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        footer { text-align: center; padding: 2rem; color: var(--dim); font-size: 0.85rem; border-top: 1px solid var(--border); }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <img src="https://dirmacs.github.io/thulp/img/thulp-logo.svg" alt="Thulp">
+        <h1>Thulp</h1>
+        <p>Execution context engineering for AI agents. One interface for tool discovery, validation, execution, and multi-step workflows. Pure Rust. 11 crates.</p>
+        <div class="badges">
+            <a href="https://crates.io/crates/thulp-core"><img src="https://img.shields.io/crates/v/thulp-core.svg" alt="crates.io"></a>
+            <a href="https://github.com/dirmacs/thulp/actions/workflows/ci.yml"><img src="https://github.com/dirmacs/thulp/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+            <img src="https://img.shields.io/badge/crates-11-blue.svg" alt="11 crates">
+            <img src="https://img.shields.io/badge/tests-311-brightgreen.svg" alt="311 tests">
+            <img src="https://img.shields.io/badge/license-MIT%2FApache--2.0-yellow.svg" alt="MIT/Apache-2.0">
+        </div>
+        <div class="install">$ cargo install thulp-cli</div>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h3>Unified Tool Abstraction</h3>
+            <p>One interface for local functions, MCP servers, and OpenAPI endpoints. Type-safe parameters with JSON Schema validation. Builder pattern APIs.</p>
+        </div>
+        <div class="card">
+            <h3>MCP + UTCP Protocol</h3>
+            <p>Full Model Context Protocol support via rs-utcp. STDIO and HTTP transports. Tools, resources, and prompts. Drop-in for any MCP-compatible agent.</p>
+        </div>
+        <div class="card">
+            <h3>Skill Workflows</h3>
+            <p>Compose multi-step tool chains with variable interpolation, timeout/retry policies, execution hooks, and pluggable executors. Load from SKILL.md files.</p>
+        </div>
+        <div class="card">
+            <h3>Query DSL</h3>
+            <p>Filter and search tools with a powerful query language. Wildcards, boolean operators, parameter constraints. <code>name:search and min:2</code></p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Workspace</h2>
+        <table>
+            <tr><th>Crate</th><th>Description</th><th>Tests</th></tr>
+            <tr><td><strong>thulp-core</strong></td><td>Core types, traits, parameter validation</td><td>70</td></tr>
+            <tr><td><strong>thulp-mcp</strong></td><td>MCP transport (STDIO/HTTP), tools, resources</td><td>39</td></tr>
+            <tr><td><strong>thulp-skills</strong></td><td>Multi-step workflows, executor, hooks, retry</td><td>54</td></tr>
+            <tr><td><strong>thulp-skill-files</strong></td><td>SKILL.md parsing, YAML frontmatter, scope priority</td><td>23</td></tr>
+            <tr><td><strong>thulp-query</strong></td><td>Query DSL with nom parser</td><td>19</td></tr>
+            <tr><td><strong>thulp-workspace</strong></td><td>Sessions, persistence, turn counting</td><td>6</td></tr>
+            <tr><td><strong>thulp-adapter</strong></td><td>OpenAPI v2/v3 to tool conversion</td><td>10</td></tr>
+            <tr><td><strong>thulp-registry</strong></td><td>Async thread-safe tool registry with tagging</td><td>8</td></tr>
+            <tr><td><strong>thulp-browser</strong></td><td>Web fetching, HTML parsing, optional CDP</td><td>7</td></tr>
+            <tr><td><strong>thulp-guidance</strong></td><td>Template rendering, LLM guidance primitives</td><td>6</td></tr>
+            <tr><td><strong>thulp-cli</strong></td><td>CLI with JSON output and shell completions</td><td>36</td></tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Quick Start</h2>
+        <h3>Define a Tool</h3>
+        <pre><code>use thulp_core::{ToolDefinition, Parameter, ParameterType};
+
+let tool = ToolDefinition::builder("search")
+    .description("Search for information")
+    .parameter(
+        Parameter::builder("query")
+            .param_type(ParameterType::String)
+            .required(true)
+            .build()
+    )
+    .build();</code></pre>
+
+        <h3>Connect to MCP Server</h3>
+        <pre><code>use thulp_mcp::McpClient;
+
+let client = McpClient::connect_stdio("server", "mcp-server", None).await?;
+let tools = client.list_tools().await?;
+let result = client.call(&amp;ToolCall::builder("search")
+    .arg_str("query", "rust async")
+    .build()).await?;</code></pre>
+
+        <h3>CLI</h3>
+        <pre><code>thulp tools list --output json
+thulp tools validate search --args '{"query": "rust"}'
+thulp convert openapi spec.yaml --output tools.yaml
+thulp completions bash > ~/.local/share/bash-completion/completions/thulp</code></pre>
+    </div>
+
+    <div class="section">
+        <h2>Ecosystem</h2>
+        <table>
+            <tr><th>Project</th><th>What</th></tr>
+            <tr><td><a href="https://github.com/dirmacs/pawan">pawan</a></td><td>CLI coding agent — uses thulp for tool abstraction</td></tr>
+            <tr><td><a href="https://github.com/dirmacs/ares">ares</a></td><td>Agentic retrieval-enhanced server</td></tr>
+            <tr><td><a href="https://eruka.dirmacs.com">eruka</a></td><td>Context intelligence engine</td></tr>
+            <tr><td><a href="https://dirmacs.github.io/daedra">daedra</a></td><td>Self-contained web search MCP server</td></tr>
+        </table>
+    </div>
+
+    <footer>
+        Built by <a href="https://dirmacs.com">DIRMACS</a> &middot;
+        <a href="https://github.com/dirmacs/thulp">GitHub</a> &middot;
+        <a href="https://crates.io/search?q=thulp">crates.io</a> &middot;
+        <a href="https://docs.rs/thulp-core">docs.rs</a>
+    </footer>
+</body>
+</html>
