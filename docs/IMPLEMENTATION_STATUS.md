@@ -1,14 +1,15 @@
 # Thulp Implementation Status
 
-**Last Updated**: February 1, 2026
+**Last Updated**: March 22, 2026
 
 ## Summary
 
-- **Total Tests**: 190+ passing
+- **Total Tests**: 311 passing
 - **Clippy**: Clean (no warnings)
 - **Build Status**: Successful
-- **Crates**: 11 crates in workspace (added thulp-skill-files)
+- **Crates**: 11 crates in workspace
 - **Latest Release**: v0.3.0 on crates.io
+- **Documentation**: [dirmacs.github.io/thulp](https://dirmacs.github.io/thulp)
 
 ## Completed Work
 
