@@ -5,7 +5,7 @@
 <h1 align="center">Thulp</h1>
 
 <p align="center">
-  Execution context engineering for AI agents. Rust. 11 crates. 311 tests.<br>
+  Execution context engineering for AI agents. Rust. 11 crates. 331 tests.<br>
   One interface for tool discovery, validation, execution, and multi-step workflows.
 </p>
 
@@ -14,7 +14,7 @@
   <a href="https://github.com/dirmacs/thulp/actions/workflows/ci.yml"><img src="https://github.com/dirmacs/thulp/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://docs.rs/thulp-core"><img src="https://docs.rs/thulp-core/badge.svg" alt="docs.rs"></a>
   <img src="https://img.shields.io/badge/crates-11-blue.svg" alt="11 crates">
-  <img src="https://img.shields.io/badge/tests-311-brightgreen.svg" alt="311 tests">
+  <img src="https://img.shields.io/badge/tests-311-brightgreen.svg" alt="331 tests">
   <img src="https://img.shields.io/badge/license-MIT%2FApache--2.0-yellow.svg" alt="License">
 </p>
 
@@ -64,7 +64,7 @@ No runtime overhead. No framework lock-in. Pure Rust async.
 | **thulp-registry** | Async thread-safe tool registry with tagging | 8 |
 | **thulp-browser** | Web fetching, HTML parsing, optional CDP | 7 |
 | **thulp-guidance** | Template rendering, LLM guidance primitives | 6 |
-| **thulp-cli** | CLI with JSON output and shell completions | 36 |
+| **thulp-cli** | CLI with JSON output, shell completions, init/run/skill/config commands | 32 |
 
 ## Quick Start
 
@@ -169,7 +169,7 @@ thulp/
 
 ```bash
 cargo build --workspace                     # build all
-cargo test --workspace                      # 311 tests
+cargo test --workspace                      # 331 tests
 cargo clippy --workspace -- -D warnings     # lint (currently clean)
 cargo bench -p thulp-core --bench tool_benchmarks  # benchmarks
 ```
