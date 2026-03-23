@@ -26,7 +26,7 @@
   - `thulp-browser`: Browser automation (7 tests)
   - `thulp-guidance`: Template guidance system (6 tests)
   - `thulp-registry`: Tool registry (8 tests)
-  - `thulp-cli`: Command-line interface (12 tests)
+  - `thulp-cli`: Command-line interface (32 tests)
 
 #### Core Types Implementation
 - ✅ `ToolDefinition`: Tool metadata with parameters
@@ -97,6 +97,23 @@
 - ✅ MCP commands (feature-gated with `--features mcp`)
 - ✅ Proper error handling with exit codes
 - ✅ Integration tests for all commands
+
+#### New CLI Commands (Phase 4.1)
+- ✅ `thulp init` - Initialize workspace with `.thulp/` directory structure
+- ✅ `thulp run <tool>` - Execute tools directly with key=value or --json args
+- ✅ `thulp skill list` - List available skills by scope (global/workspace/project)
+- ✅ `thulp skill show <name>` - Show skill details
+- ✅ `thulp skill run <name>` - Execute skill workflows with parameters
+- ✅ `thulp skill validate <file>` - Validate SKILL.md or skill.yaml files
+- ✅ `thulp skill export <name>` - Export skill as shell/json/yaml
+- ✅ `thulp config show` - Show workspace configuration
+- ✅ `thulp config get <key>` - Get configuration value
+- ✅ `thulp config set <key> <value>` - Set configuration value
+- ✅ `thulp config add-server <name>` - Add MCP server (stdio/http)
+- ✅ `thulp config servers` - List configured servers
+- ✅ `--workspace` / `-w` global flag for workspace directory
+- ✅ `--dry-run` flag for run/skill commands
+- ✅ 26 unit tests for new commands
 
 ### Phase 5: Supplementary Features - COMPLETE
 
