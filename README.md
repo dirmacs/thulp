@@ -1,101 +1,74 @@
-# thulp
+<p align="center">
+  <img src="docs/static/img/thulp-logo.svg" width="128" alt="thulp">
+</p>
 
-[![CI](https://github.com/dirmacs/thulp/actions/workflows/ci.yml/badge.svg)](https://github.com/dirmacs/thulp/actions/workflows/ci.yml)
-[![crates.io](https://img.shields.io/crates/v/thulp-core.svg)](https://crates.io/crates/thulp-core)
-[![docs.rs](https://docs.rs/thulp-core/badge.svg)](https://docs.rs/thulp-core)
-[![License](https://img.shields.io/crates/l/thulp-core.svg)](LICENSE-MIT)
+<h1 align="center">Thulp</h1>
 
-## Execution Context Engineering Platform for AI Agents
+<p align="center">
+  Execution context engineering for AI agents. Rust. 11 crates. 311 tests.<br>
+  One interface for tool discovery, validation, execution, and multi-step workflows.
+</p>
 
-Thulp is a Rust-based toolkit for building AI agents with rich execution
-contexts. It provides abstractions for tool discovery, execution, workspace
-management, and integration with the Model Context Protocol (MCP) via the
-[UTCP](https://github.com/universal-tool-calling-protocol/rs-utcp)
-(Universal Tool Calling Protocol) implementation.
+<p align="center">
+  <a href="https://crates.io/crates/thulp-core"><img src="https://img.shields.io/crates/v/thulp-core.svg" alt="crates.io"></a>
+  <a href="https://github.com/dirmacs/thulp/actions/workflows/ci.yml"><img src="https://github.com/dirmacs/thulp/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://docs.rs/thulp-core"><img src="https://docs.rs/thulp-core/badge.svg" alt="docs.rs"></a>
+  <img src="https://img.shields.io/badge/crates-11-blue.svg" alt="11 crates">
+  <img src="https://img.shields.io/badge/tests-311-brightgreen.svg" alt="311 tests">
+  <img src="https://img.shields.io/badge/license-MIT%2FApache--2.0-yellow.svg" alt="License">
+</p>
 
-## Overview
+---
 
-Thulp enables AI agents to interact with external tools and services through a
-unified interface. It handles the complexity of tool discovery, validation,
-execution, and result handling while providing extensibility through adapters
-and custom integrations.
+**Thulp** gives AI agents a unified way to discover, validate, and execute tools — whether they're local functions, [MCP](https://modelcontextprotocol.io/) servers, or OpenAPI endpoints. It handles parameter validation, multi-step skill workflows, session persistence, and query-based tool filtering. Built on [rs-utcp](https://github.com/universal-tool-calling-protocol/rs-utcp) for protocol transport.
 
-### Key Features
+Built by [DIRMACS](https://dirmacs.com).
 
-- **Unified Tool Abstraction**: Consistent interface for defining, validating,
-  and executing tools
-- **MCP Integration**: Full Model Context Protocol support via `rs-utcp` UTCP
-  implementation (tools, resources, prompts)
-- **Type-Safe Parameters**: Strongly-typed parameter validation with JSON
-  Schema support
-- **Query DSL**: Powerful query language for filtering and searching tools
-- **Skill Workflows**: Compose multi-step tool workflows with variable interpolation
-- **SkillExecutor Trait**: Pluggable execution strategies with timeout/retry support
-- **Execution Hooks**: Lifecycle callbacks for observability (before/after skill/step, on_error, on_retry, on_timeout)
-- **Session Management**: Persistent sessions with turn counting, configurable limits, and file-based storage
-- **SKILL.md Parsing**: Load skills from markdown files with YAML frontmatter and scope-based priority
-- **Async by Design**: Built on `tokio` for efficient async execution
-- **CLI with Shell Completions**: Full-featured CLI with JSON output and completions
-- **Browser Automation**: Web fetching and optional CDP support
-- **Comprehensive Testing**: 183 tests with edge-case coverage
-
-## Architecture
-
-Thulp is organized as a Cargo workspace with 11 crates:
-
-### Core Crates
-
-| Crate              | Description                                       |
-| ------------------ | ------------------------------------------------- |
-| **thulp-core**     | Core types and traits (`ToolDefinition`, etc.)    |
-| **thulp-mcp**      | MCP transport (STDIO/HTTP, tools, resources)      |
-| **thulp-adapter**  | OpenAPI v2/v3 to tool definition conversion       |
-| **thulp-registry** | Async thread-safe tool registry with tagging      |
-
-### Feature Crates
-
-| Crate                | Description                                       |
-| -------------------- | ------------------------------------------------- |
-| **thulp-query**      | Query DSL for searching and filtering tools       |
-| **thulp-skills**     | Multi-step workflow composition and execution     |
-| **thulp-skill-files**| SKILL.md file parsing with YAML frontmatter       |
-| **thulp-workspace**  | Workspace, session management, and persistence    |
-| **thulp-browser**    | Web fetching, HTML parsing, optional CDP support  |
-| **thulp-guidance**   | Template rendering and LLM guidance primitives    |
-
-### CLI
-
-| Crate         | Description                                        |
-| ------------- | -------------------------------------------------- |
-| **thulp-cli** | CLI with JSON output and shell completions         |
-
-## Installation
-
-### Install CLI
+## Install
 
 ```bash
 cargo install thulp-cli
 ```
 
-### Add as Dependency
-
 ```toml
+# Or as a library
 [dependencies]
-thulp-core = "0.2"
-thulp-mcp = "0.2"
-thulp-query = "0.2"
+thulp-core = "0.3"
+thulp-mcp = "0.3"
+thulp-skills = "0.3"
 ```
 
-For MCP with Ares server support:
+## Why Thulp?
 
-```toml
-[dependencies]
-thulp-mcp = { version = "0.2", features = ["ares"] }
-```
+Every AI agent needs tools. But each agent framework invents its own tool format, validation, and execution layer. Thulp standardizes this:
+
+- **One tool definition** works across local functions, MCP servers, and OpenAPI specs
+- **Type-safe parameters** with JSON Schema validation — catch errors before execution
+- **Skill workflows** compose multi-step tool chains with `{{variable}}` interpolation, timeout/retry, and hooks
+- **Query DSL** finds tools by name, parameter count, or tags — `name:search and min:2`
+- **Session persistence** tracks turns, enforces limits, stores results to disk
+
+No runtime overhead. No framework lock-in. Pure Rust async.
+
+## Workspace (11 crates)
+
+| Crate | What | Tests |
+|-------|------|-------|
+| **thulp-core** | Types, traits, parameter validation, JSON Schema | 70 |
+| **thulp-mcp** | MCP transport (STDIO/HTTP), tools, resources, prompts | 39 |
+| **thulp-skills** | Multi-step workflows, executor trait, hooks, retry | 54 |
+| **thulp-skill-files** | SKILL.md parsing, YAML frontmatter, scope priority | 23 |
+| **thulp-query** | Query DSL with nom parser, wildcards, boolean ops | 19 |
+| **thulp-workspace** | Sessions, turn counting, file persistence | 6 |
+| **thulp-adapter** | OpenAPI v2/v3 to tool conversion (JSON + YAML) | 10 |
+| **thulp-registry** | Async thread-safe tool registry with tagging | 8 |
+| **thulp-browser** | Web fetching, HTML parsing, optional CDP | 7 |
+| **thulp-guidance** | Template rendering, LLM guidance primitives | 6 |
+| **thulp-cli** | CLI with JSON output and shell completions | 36 |
 
 ## Quick Start
 
-### Defining a Tool
+### Define a tool
 
 ```rust
 use thulp_core::{ToolDefinition, Parameter, ParameterType};
@@ -104,7 +77,6 @@ let tool = ToolDefinition::builder("search")
     .description("Search for information")
     .parameter(
         Parameter::builder("query")
-            .description("Search query")
             .param_type(ParameterType::String)
             .required(true)
             .build()
@@ -112,28 +84,37 @@ let tool = ToolDefinition::builder("search")
     .build();
 ```
 
-### Connecting to an MCP Server
+### Connect to an MCP server
 
 ```rust
 use thulp_mcp::McpClient;
 
-// Connect via HTTP
-let client = McpClient::connect_http("server", "http://localhost:8080".to_string()).await?;
-
-// Or via STDIO
-let client = McpClient::connect_stdio(
-    "server",
-    "path/to/mcp-server".to_string(),
-    None
-).await?;
-
-// List available tools
+let client = McpClient::connect_stdio("server", "mcp-server", None).await?;
 let tools = client.list_tools().await?;
-
-// Execute a tool
-let result = client.call(&ToolCall::builder("tool_name")
-    .arg_str("param", "value")
+let result = client.call(&ToolCall::builder("search")
+    .arg_str("query", "rust async")
     .build()).await?;
+```
+
+### Compose a skill workflow
+
+```rust
+use thulp_skills::{Skill, SkillStep};
+
+let skill = Skill::new("search_and_summarize", "Search and summarize")
+    .with_input("query")
+    .with_step(SkillStep {
+        name: "search".into(),
+        tool: "web_search".into(),
+        arguments: json!({"query": "{{query}}"}),
+        continue_on_error: false,
+    })
+    .with_step(SkillStep {
+        name: "summarize".into(),
+        tool: "summarize".into(),
+        arguments: json!({"text": "{{search.results}}"}),
+        continue_on_error: false,
+    });
 ```
 
 ### Query DSL
@@ -141,188 +122,76 @@ let result = client.call(&ToolCall::builder("tool_name")
 ```rust
 use thulp_query::{parse_query, QueryBuilder};
 
-// Parse natural language query
 let criteria = parse_query("name:search and min:2")?;
 let matches: Vec<_> = tools.iter().filter(|t| criteria.matches(t)).collect();
-
-// Or use the builder
-let query = QueryBuilder::new()
-    .name("file")
-    .min_parameters(1)
-    .build();
-let results = query.execute(&tools);
 ```
 
-### Skill Workflows
-
-```rust
-use thulp_skills::{Skill, SkillStep};
-
-let skill = Skill::new("search_and_summarize", "Search and summarize results")
-    .with_input("query")
-    .with_step(SkillStep {
-        name: "search".to_string(),
-        tool: "web_search".to_string(),
-        arguments: json!({"query": "{{query}}"}),
-        continue_on_error: false,
-    })
-    .with_step(SkillStep {
-        name: "summarize".to_string(),
-        tool: "summarize".to_string(),
-        arguments: json!({"text": "{{search.results}}"}),
-        continue_on_error: false,
-    });
-```
-
-## CLI Usage
+## CLI
 
 ```bash
-# List tools
-thulp tools list
-thulp tools list --output json
-
-# Show tool details
-thulp tools show <tool-name>
-
-# Validate tool arguments
-thulp tools validate <tool-name> --args '{"param": "value"}'
-
-# Convert OpenAPI spec to tools
-thulp convert openapi spec.yaml --output tools.yaml
-
-# Run demo
-thulp demo
-
-# Generate shell completions
+thulp tools list                                      # list available tools
+thulp tools list --output json                        # JSON output
+thulp tools show <name>                               # tool details
+thulp tools validate <name> --args '{"q": "rust"}'    # validate arguments
+thulp convert openapi spec.yaml --output tools.yaml   # OpenAPI conversion
+thulp demo                                            # interactive demo
 thulp completions bash > ~/.local/share/bash-completion/completions/thulp
-thulp completions powershell >> $PROFILE
 ```
 
-## Examples
+## Architecture
 
-Thulp includes 6 comprehensive examples:
-
-```bash
-# Core tool types
-cargo run --example tool_definition
-
-# OpenAPI conversion
-cargo run --example adapter
-
-# MCP integration
-cargo run --example mcp --features mcp
-
-# Query DSL
-cargo run --example query
-
-# Skill workflows
-cargo run --example skills
-
-# Async registry
-cargo run --example registry
 ```
+thulp/
+  crates/
+    thulp-core/        # types, traits, validation (zero dependencies on other thulp crates)
+    thulp-mcp/         # MCP client (rs-utcp, STDIO + HTTP transport)
+    thulp-skills/      # workflow engine (executor, hooks, retry, timeout)
+    thulp-skill-files/ # SKILL.md parser (YAML frontmatter, scope priority)
+    thulp-query/       # DSL parser (nom, wildcards, boolean operators)
+    thulp-workspace/   # sessions, persistence, turn counting
+    thulp-adapter/     # OpenAPI v2/v3 → ToolDefinition converter
+    thulp-registry/    # async thread-safe tool registry with tags
+    thulp-browser/     # web fetching, HTML parsing, optional CDP
+    thulp-guidance/    # template rendering, LLM guidance
+    thulp-cli/         # clap CLI with JSON output + shell completions
+  examples/            # 6 runnable examples
+```
+
+### Feature flags
+
+| Crate | Flag | Description |
+|-------|------|-------------|
+| thulp-mcp | `ares` | Ares server integration |
+| thulp-browser | `cdp` | Chrome DevTools Protocol support |
+| thulp-skills | `mcp` | MCP support in skill execution |
 
 ## Development
 
-### Building
-
 ```bash
-# Build all crates
-cargo build --workspace
-
-# Build with CDP feature
-cargo build -p thulp-browser --features cdp
-
-# Build in release mode
-cargo build --workspace --release
+cargo build --workspace                     # build all
+cargo test --workspace                      # 311 tests
+cargo clippy --workspace -- -D warnings     # lint (currently clean)
+cargo bench -p thulp-core --bench tool_benchmarks  # benchmarks
 ```
 
-### Testing
+## Ecosystem
 
-```bash
-# Run all tests (183 tests)
-cargo test --workspace
-
-# Run with verbose output
-cargo test --workspace -- --nocapture
-```
-
-### Benchmarking
-
-```bash
-cargo bench -p thulp-core --bench tool_benchmarks
-```
-
-### Code Quality
-
-```bash
-cargo clippy --workspace -- -D warnings
-cargo fmt --all -- --check
-```
-
-## Project Status
-
-**Version**: 0.2.0
-
-### Complete Features
-
-- Core tool abstraction and validation
-- MCP transport (STDIO and HTTP) with tools, resources, prompts
-- Parameter type system with JSON Schema support
-- Query DSL with wildcards and boolean operators
-- Skill workflows with variable interpolation
-- SkillExecutor trait with pluggable execution strategies
-- DefaultSkillExecutor with timeout and retry support
-- ExecutionHooks for lifecycle callbacks and observability
-- Session management with turn counting and persistence
-- SessionManager for file-based session storage
-- SKILL.md file parsing with YAML frontmatter (thulp-skill-files)
-- SkillLoader with scope-based priority (Global/Workspace/Project)
-- OpenAPI v2/v3 conversion (JSON and YAML)
-- CLI with JSON output and shell completions
-- Async thread-safe tool registry with tagging
-- Browser web fetching and HTML parsing
-- 183 tests with comprehensive coverage
-
-### Feature Flags
-
-| Crate          | Flag   | Description                       |
-| -------------- | ------ | --------------------------------- |
-| thulp-mcp      | `ares` | Ares server integration           |
-| thulp-browser  | `cdp`  | Chrome DevTools Protocol support  |
-| thulp-examples | `mcp`  | MCP example                       |
-
-## Contributing
-
-Contributions are welcome! Please follow these guidelines:
-
-1. Fork the repository
-2. Create a feature branch
-3. Write tests for new functionality
-4. Ensure all tests pass: `cargo test --workspace`
-5. Run clippy: `cargo clippy --workspace -- -D warnings`
-6. Format code: `cargo fmt --all`
-7. Submit a pull request
+| Project | What |
+|---------|------|
+| [pawan](https://github.com/dirmacs/pawan) | CLI coding agent — uses thulp for tool abstraction |
+| [ares](https://github.com/dirmacs/ares) | Agentic retrieval-enhanced server |
+| [eruka](https://eruka.dirmacs.com) | Context intelligence engine |
+| [daedra](https://dirmacs.github.io/daedra) | Self-contained web search MCP server |
+| [doltares](https://github.com/dirmacs/doltares) | Orchestration daemon (DAG workflows) |
 
 ## License
 
-Licensed under either of:
-
-- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
-- MIT license ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
-
-at your option.
+MIT OR Apache-2.0
 
 ## Links
 
-- [Repository](https://github.com/dirmacs/thulp)
-- [Crates.io](https://crates.io/search?q=thulp)
-- [Documentation](https://docs.rs/thulp-core)
+- [Documentation](https://dirmacs.github.io/thulp)
+- [API Reference](https://docs.rs/thulp-core)
+- [crates.io](https://crates.io/search?q=thulp)
 - [MCP Specification](https://modelcontextprotocol.io/)
 - [rs-utcp](https://github.com/universal-tool-calling-protocol/rs-utcp)
-
-## Acknowledgments
-
-- **rs-utcp**: UTCP protocol implementation (includes MCP transport)
-- **Anthropic**: Model Context Protocol specification
-- **UTCP**: Universal Tool Calling Protocol
