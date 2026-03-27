@@ -614,16 +614,16 @@ async fn handle_skill_commands(
             dry_run,
             continue_on_error,
         } => {
-            handle_skill_run(
+            handle_skill_run(SkillRunOpts {
                 workspace_dir,
-                &name,
+                name: &name,
                 params,
-                json,
+                json_params: json,
                 timeout,
                 dry_run,
                 continue_on_error,
                 output,
-            )
+            })
             .await?;
         }
         SkillCommands::Validate { file } => {
@@ -780,16 +780,30 @@ fn handle_skill_show(
     Err(format!("Skill '{}' not found", name).into())
 }
 
-async fn handle_skill_run(
-    _workspace_dir: &Path,
-    name: &str,
+struct SkillRunOpts<'a> {
+    workspace_dir: &'a Path,
+    name: &'a str,
     params: Vec<String>,
     json_params: Option<String>,
     timeout: u64,
     dry_run: bool,
     continue_on_error: bool,
-    output: &Output,
+    output: &'a Output,
+}
+
+async fn handle_skill_run(
+    opts: SkillRunOpts<'_>,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    let SkillRunOpts {
+        workspace_dir: _workspace_dir,
+        name,
+        params,
+        json_params,
+        timeout,
+        dry_run,
+        continue_on_error,
+        output,
+    } = opts;
     // Parse parameters
     let parameters: serde_json::Value = if let Some(json_str) = json_params {
         serde_json::from_str(&json_str)?
@@ -861,10 +875,10 @@ fn handle_skill_validate(file: &Path, output: &Output) -> Result<(), Box<dyn std
             .map_err(|e| format!("YAML parse error: {}", e))
     } else if file_name == "SKILL.md" {
         // Basic SKILL.md validation - check for YAML frontmatter
-        if content.starts_with("---") {
-            let end = content[3..].find("---").map(|i| i + 3);
+        if let Some(after_start) = content.strip_prefix("---") {
+            let end = after_start.find("---");
             if let Some(end_idx) = end {
-                let frontmatter = &content[3..end_idx];
+                let frontmatter = &after_start[..end_idx];
                 serde_yaml::from_str::<serde_json::Value>(frontmatter)
                     .map_err(|e| format!("Frontmatter parse error: {}", e))
             } else {
