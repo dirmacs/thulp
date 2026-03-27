@@ -226,24 +226,24 @@ Feature: Skill Execution
 ### Deliverables
 
 #### Week 11: CLI Core
-- [ ] `thulp-cli` crate with `clap`
-- [ ] `thulp init` command
-- [ ] `thulp run <tool>` command
-- [ ] `thulp skill run` command
-- [ ] Output formatting (json, table, plain)
+- [x] `thulp-cli` crate with `clap`
+- [x] `thulp init` command
+- [x] `thulp run <tool>` command
+- [x] `thulp skill run` command
+- [x] Output formatting (json, table, plain)
 
 #### Week 12: CLI Complete
 - [ ] `thulp adapter generate` command
 - [ ] `thulp flow export` command
-- [ ] `thulp config` commands
-- [ ] Error presentation
+- [x] `thulp config` commands
+- [x] Error presentation
 - [ ] Progress indicators
 
 #### Week 13: Integration & Polish
-- [ ] End-to-end testing
+- [x] End-to-end testing
 - [ ] Performance optimization
-- [ ] Error message improvements
-- [ ] Shell completions
+- [x] Error message improvements
+- [x] Shell completions
 
 ### Testing Focus
 ```
@@ -272,10 +272,10 @@ Feature: Skill Workflow
 ```
 
 ### Exit Criteria
-- [ ] All CLI commands functional
-- [ ] E2E tests cover main user journeys
+- [x] All CLI commands functional (init, run, skill, config, validate)
+- [x] E2E tests cover main user journeys (6 integration tests)
 - [ ] Performance targets met
-- [ ] Documentation complete
+- [x] Documentation complete
 
 ---
 
