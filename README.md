@@ -5,7 +5,7 @@
 <h1 align="center">Thulp</h1>
 
 <p align="center">
-  Execution context engineering for AI agents. Rust. 11 crates. 331 tests.<br>
+  Execution context engineering for AI agents.<br>
   One interface for tool discovery, validation, execution, and multi-step workflows.
 </p>
 
@@ -13,8 +13,6 @@
   <a href="https://crates.io/crates/thulp-core"><img src="https://img.shields.io/crates/v/thulp-core.svg" alt="crates.io"></a>
   <a href="https://github.com/dirmacs/thulp/actions/workflows/ci.yml"><img src="https://github.com/dirmacs/thulp/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://docs.rs/thulp-core"><img src="https://docs.rs/thulp-core/badge.svg" alt="docs.rs"></a>
-  <img src="https://img.shields.io/badge/crates-11-blue.svg" alt="11 crates">
-  <img src="https://img.shields.io/badge/tests-311-brightgreen.svg" alt="331 tests">
   <img src="https://img.shields.io/badge/license-MIT%2FApache--2.0-yellow.svg" alt="License">
 </p>
 
@@ -169,7 +167,7 @@ thulp/
 
 ```bash
 cargo build --workspace                     # build all
-cargo test --workspace                      # 331 tests
+cargo test --workspace
 cargo clippy --workspace -- -D warnings     # lint (currently clean)
 cargo bench -p thulp-core --bench tool_benchmarks  # benchmarks
 ```
