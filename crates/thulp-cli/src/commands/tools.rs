@@ -4,6 +4,7 @@ use std::path::Path;
 use thulp_core::{Parameter, ParameterType, ToolCall, ToolDefinition};
 use crate::output::Output;
 
+#[derive(Subcommand, Debug)]
 pub enum ToolCommands {
     /// List all available tools
     List,
