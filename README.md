@@ -180,7 +180,6 @@ cargo bench -p thulp-core --bench tool_benchmarks  # benchmarks
 | [ares](https://github.com/dirmacs/ares) | Agentic retrieval-enhanced server |
 | [eruka](https://eruka.dirmacs.com) | Context intelligence engine |
 | [daedra](https://dirmacs.github.io/daedra) | Self-contained web search MCP server |
-| [doltares](https://github.com/dirmacs/doltares) | Orchestration daemon (DAG workflows) |
 
 ## License
 
