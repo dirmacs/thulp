@@ -5,6 +5,7 @@ authors = ["Dirmacs <contact@dirmacs.org>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/dirmacs/thulp"
 description = "Browser automation tools for thulp"
+readme = "README.md"
 rust-version = "1.75"
 
 edition = "2021"
