@@ -7038,7 +7038,7 @@ dependencies = [
 
 [[package]]
 name = "thulp-examples"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "serde_json",
  "thulp-adapter",
@@ -7100,7 +7100,7 @@ dependencies = [
 
 [[package]]
 name = "thulp-skill-files"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "dirs 5.0.1",
  "regex",
