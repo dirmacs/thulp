@@ -25,7 +25,7 @@ Built by [DIRMACS](https://dirmacs.com).
 ## Install
 
 ```bash
-cargo install thulp-cli
+cargo install thulp
 ```
 
 ```toml
@@ -62,7 +62,7 @@ No runtime overhead. No framework lock-in. Pure Rust async.
 | **thulp-registry** | Async thread-safe tool registry with tagging | 8 |
 | **thulp-browser** | Web fetching, HTML parsing, optional CDP | 7 |
 | **thulp-guidance** | Template rendering, LLM guidance primitives | 6 |
-| **thulp-cli** | CLI with JSON output, shell completions, init/run/skill/config commands | 32 |
+| **thulp** | CLI with JSON output, shell completions, init/run/skill/config commands | 32 |
 
 ## Quick Start
 
