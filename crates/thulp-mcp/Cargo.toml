@@ -26,10 +26,14 @@ uuid = { version = "1.0", features = ["v4"] }
 # rs-utcp integration for MCP protocol
 rs-utcp = { version = "0.3" }
 
-# ares-server - optional integration for production-grade MCP support
-# Patched via root [patch.crates-io] to avoid workspace conflict
-ares-server = { version = "0.3.1", default-features = false, features = ["ares-vector"], optional = true }
+# ares-server - optional integration for production-grade tool registry
+# Real integration (not a stub): wraps ares_server::ToolRegistry and
+# exposes registered tools (Calculator, optional WebSearch) to thulp.
+ares-server = { version = "0.7.2", default-features = false, optional = true }
 
 [features]
 default = []
+# Enable the ares_integration module (Calculator only by default)
 ares = ["dep:ares-server"]
+# Also register ares-server's WebSearch tool (requires search-tools feature)
+ares-search = ["ares", "ares-server/search-tools"]
