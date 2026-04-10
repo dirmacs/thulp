@@ -3,7 +3,7 @@ use std::process::Command;
 #[test]
 fn test_cli_help() {
     let output = Command::new("cargo")
-        .args(["run", "--package", "thulp-cli", "--", "--help"])
+        .args(["run", "--package", "thulp", "--", "--help"])
         .output()
         .expect("Failed to execute command");
 
@@ -15,7 +15,7 @@ fn test_cli_help() {
 #[test]
 fn test_cli_tools_list() {
     let output = Command::new("cargo")
-        .args(["run", "--package", "thulp-cli", "--", "tools", "list"])
+        .args(["run", "--package", "thulp", "--", "tools", "list"])
         .output()
         .expect("Failed to execute command");
 
@@ -32,7 +32,7 @@ fn test_cli_tools_show() {
         .args([
             "run",
             "--package",
-            "thulp-cli",
+            "thulp",
             "--",
             "tools",
             "show",
@@ -54,7 +54,7 @@ fn test_cli_tools_validate() {
         .args([
             "run",
             "--package",
-            "thulp-cli",
+            "thulp",
             "--",
             "tools",
             "validate",
@@ -76,7 +76,7 @@ fn test_cli_mcp_status() {
         .args([
             "run",
             "--package",
-            "thulp-cli",
+            "thulp",
             "--features",
             "mcp",
             "--",
@@ -94,7 +94,7 @@ fn test_cli_mcp_status() {
 #[test]
 fn test_cli_demo() {
     let output = Command::new("cargo")
-        .args(["run", "--package", "thulp-cli", "--", "demo"])
+        .args(["run", "--package", "thulp", "--", "demo"])
         .output()
         .expect("Failed to execute command");
 
@@ -107,7 +107,7 @@ fn test_cli_demo() {
 #[test]
 fn test_cli_convert_examples() {
     let output = Command::new("cargo")
-        .args(["run", "--package", "thulp-cli", "--", "convert", "examples"])
+        .args(["run", "--package", "thulp", "--", "convert", "examples"])
         .output()
         .expect("Failed to execute command");
 
