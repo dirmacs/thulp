@@ -83,6 +83,53 @@ impl ToolDefinition {
         Ok(())
     }
 
+    /// Convert this tool definition into an MCP-compatible JSON Schema `Value`
+    /// suitable for the `tools[].function.parameters` field that
+    /// OpenAI-compatible LLM APIs expect.
+    ///
+    /// Inverse of `parse_mcp_input_schema`. Round-trip is structurally stable
+    /// for `name`, `param_type`, `required`, `description`, `default`, and
+    /// `enum_values`. Round-trip is exact when no extra schema fields are
+    /// present.
+    pub fn to_mcp_input_schema(&self) -> serde_json::Value {
+        let mut properties = serde_json::Map::new();
+        let mut required: Vec<serde_json::Value> = Vec::new();
+
+        for param in &self.parameters {
+            let mut prop = serde_json::Map::new();
+            prop.insert(
+                "type".to_string(),
+                serde_json::Value::String(param.param_type.as_str().to_string()),
+            );
+            if !param.description.is_empty() {
+                prop.insert(
+                    "description".to_string(),
+                    serde_json::Value::String(param.description.clone()),
+                );
+            }
+            if !param.enum_values.is_empty() {
+                prop.insert(
+                    "enum".to_string(),
+                    serde_json::Value::Array(param.enum_values.clone()),
+                );
+            }
+            if let Some(default) = &param.default {
+                prop.insert("default".to_string(), default.clone());
+            }
+            properties.insert(param.name.clone(), serde_json::Value::Object(prop));
+
+            if param.required {
+                required.push(serde_json::Value::String(param.name.clone()));
+            }
+        }
+
+        serde_json::json!({
+            "type": "object",
+            "properties": properties,
+            "required": required,
+        })
+    }
+
     /// Parse MCP inputSchema into Parameters
     pub fn parse_mcp_input_schema(schema: &serde_json::Value) -> Result<Vec<Parameter>> {
         let mut params = Vec::new();
@@ -833,5 +880,66 @@ mod tests {
         let params = ToolDefinition::parse_mcp_input_schema(&schema).unwrap();
         assert_eq!(params.len(), 1);
         assert_eq!(params[0].description, "");
+    }
+
+    #[test]
+    fn to_mcp_input_schema_basic() {
+        let def = ToolDefinition::builder("test_tool")
+            .description("A test tool")
+            .parameter(Parameter::required_string("path"))
+            .parameter(Parameter::optional_string("encoding"))
+            .build();
+        let schema = def.to_mcp_input_schema();
+        assert_eq!(schema["type"], "object");
+        assert_eq!(schema["properties"]["path"]["type"], "string");
+        assert_eq!(schema["properties"]["encoding"]["type"], "string");
+        let required = schema["required"].as_array().expect("required is array");
+        assert_eq!(required.len(), 1);
+        assert_eq!(required[0], "path");
+    }
+
+    #[test]
+    fn to_mcp_input_schema_round_trip() {
+        let original = ToolDefinition::builder("rt")
+            .description("round trip")
+            .parameter(Parameter::required_string("name"))
+            .parameter(Parameter::optional_string("note"))
+            .build();
+        let schema = original.to_mcp_input_schema();
+        let parsed = ToolDefinition::parse_mcp_input_schema(&schema).unwrap();
+        assert_eq!(parsed.len(), original.parameters.len());
+        for orig in &original.parameters {
+            let p = parsed
+                .iter()
+                .find(|p| p.name == orig.name)
+                .unwrap_or_else(|| panic!("missing param {}", orig.name));
+            assert_eq!(p.param_type, orig.param_type);
+            assert_eq!(p.required, orig.required);
+        }
+    }
+
+    #[test]
+    fn to_mcp_input_schema_carries_enum_and_default() {
+        let mut param = Parameter::new("level");
+        param.param_type = ParameterType::String;
+        param.required = false;
+        param.enum_values = vec![json!("low"), json!("med"), json!("high")];
+        param.default = Some(json!("med"));
+        let def = ToolDefinition::builder("with_enum").parameter(param).build();
+
+        let schema = def.to_mcp_input_schema();
+        let level = &schema["properties"]["level"];
+        assert_eq!(level["type"], "string");
+        assert_eq!(level["enum"][0], "low");
+        assert_eq!(level["default"], "med");
+    }
+
+    #[test]
+    fn to_mcp_input_schema_empty_definition_yields_empty_properties() {
+        let def = ToolDefinition::new("noargs");
+        let schema = def.to_mcp_input_schema();
+        assert_eq!(schema["type"], "object");
+        assert!(schema["properties"].as_object().unwrap().is_empty());
+        assert!(schema["required"].as_array().unwrap().is_empty());
     }
 }
