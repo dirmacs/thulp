@@ -1,10 +1,45 @@
 # thulp-registry
 
-Async thread-safe tool registry for Thulp.
+Async thread-safe **metadata catalog** for `thulp_core::ToolDefinition`.
 
 ## Overview
 
-This crate provides a registry for managing tool definitions with support for dynamic registration, tagging, and discovery. The registry is designed for concurrent access in async environments.
+This crate provides a registry for managing tool *definitions* (the metadata
+the LLM sees) with support for dynamic registration, tagging, and discovery.
+The registry is designed for concurrent access in async environments.
+
+## Intended Use
+
+`thulp-registry` is a metadata-only store. It holds `ToolDefinition` values —
+the JSON-schema-shaped descriptions an LLM consumes — plus tags for grouping
+and discovery. It is **not** an execution runtime: there is no `Tool` trait
+and no `execute()` method.
+
+Use this crate when you need to:
+
+- Publish or serialize a catalog of tools (MCP discovery, skill manifests,
+  documentation generation)
+- Filter or tag definitions before exposing them to an LLM
+- Maintain a cross-process / cross-service tool catalog where the actual
+  executors live elsewhere (e.g., in a remote MCP server)
+
+If instead you need an **in-process executable registry** that can dispatch
+`(name, args)` to a Rust implementation, you want a different abstraction:
+typically a `HashMap<String, Arc<dyn Tool>>` where `Tool` has
+`async fn execute(&self, args: Value) -> Result<Value>`. Two existing
+examples in the dirmacs stack:
+
+- `pawan::tools::ToolRegistry` — pawan's in-process executable registry
+  with 3-tier visibility (Core / Standard / Extended) and scored
+  `select_for_query()` for dynamic tool selection
+- `ares::tools::registry::ToolRegistry` — ares-server's executable registry
+  used by the agent loop
+
+Both wrappers keep their own `Arc<dyn Tool>` storage for execution and use
+`thulp-core::ToolDefinition` for the metadata side. They also integrate
+`thulp-query` for DSL-driven filtering. The split is intentional: separating
+metadata from execution lets the same definitions be published, queried, and
+shipped to LLMs without dragging an execution runtime into every consumer.
 
 ## Features
 
