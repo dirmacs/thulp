@@ -1,9 +1,30 @@
 //! # thulp-registry
 //!
-//! Tool registry implementation for thulp.
+//! **Metadata catalog** for `thulp_core::ToolDefinition`, with tag-based
+//! discovery and async-safe concurrent access.
 //!
-//! This crate provides a registry for managing tool definitions and configurations,
-//! including loading from configuration files, caching, and discovery.
+//! ## Scope
+//!
+//! This crate stores tool *metadata* (`ToolDefinition`) — not executable
+//! handles. Use it for:
+//!
+//! - Publishing/serializing a catalog of tools (e.g., for MCP discovery,
+//!   skill manifests, documentation generation)
+//! - Tag-based filtering of definitions before exposing to an LLM
+//! - Cross-process / cross-service tool catalogs where the executor lives
+//!   somewhere else
+//!
+//! It is intentionally *not* an execution runtime. There is no `Tool` trait
+//! and no `execute()` method here. If you need an in-process registry that
+//! can dispatch `args` to a tool implementation, you want a different
+//! abstraction — typically a `HashMap<String, Arc<dyn Tool>>` where `Tool`
+//! has an `async fn execute(&self, args: Value) -> Result<Value>`. Examples
+//! of that pattern in the dirmacs stack: `pawan::tools::ToolRegistry` and
+//! `ares::tools::registry::ToolRegistry`. Both keep their own executable
+//! registries and use `thulp-core::ToolDefinition` (and `thulp-query` for
+//! filtering) for the metadata side.
+//!
+//! See `README.md` "Intended Use" for the full rationale.
 
 use std::collections::HashMap;
 use std::sync::Arc;
