@@ -46,7 +46,7 @@ Every AI agent needs tools. But each agent framework invents its own tool format
 - **Query DSL** finds tools by name, parameter count, or tags — `name:search and min:2`
 - **Session persistence** tracks turns, enforces limits, stores results to disk
 
-No runtime overhead. No framework lock-in. Pure Rust async.
+Pure Rust async. Zero overhead. Bring your own stack.
 
 ## Workspace (11 crates)
 
