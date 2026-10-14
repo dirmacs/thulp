@@ -1,19 +1,15 @@
-use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
+use clap::{CommandFactory, Parser, Subcommand};
 use clap_complete::{generate, Shell};
-use serde::Serialize;
-use serde_json::json;
-use std::path::{Path, PathBuf};
-use thulp_adapter::AdapterGenerator;
-use thulp_core::{Parameter, ParameterType, ToolCall, ToolDefinition};
+use std::path::PathBuf;
 
 #[cfg(feature = "mcp")]
 use thulp_mcp::{McpClient, McpTransport};
 
 mod commands;
 mod output;
-use commands::config::{ConfigCommands, ServerType};
+use commands::config::ConfigCommands;
 use commands::convert::ConvertCommands;
-use commands::skill::{ExportFormat, SkillCommands, SkillScope};
+use commands::skill::SkillCommands;
 use commands::tools::ToolCommands;
 use output::{Output, OutputFormat};
 

@@ -382,11 +382,9 @@ impl Session {
                 EntryType::UserMessage => {
                     awaiting_response = true;
                 }
-                EntryType::AssistantMessage => {
-                    if awaiting_response {
-                        turns += 1;
-                        awaiting_response = false;
-                    }
+                EntryType::AssistantMessage if awaiting_response => {
+                    turns += 1;
+                    awaiting_response = false;
                 }
                 _ => {}
             }

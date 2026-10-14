@@ -275,7 +275,7 @@ impl SessionManager {
         }
 
         // Sort by updated_at descending (most recent first)
-        metadata_list.sort_by(|a, b| b.updated_at.cmp(&a.updated_at));
+        metadata_list.sort_by_key(|b| std::cmp::Reverse(b.updated_at));
 
         Ok(metadata_list)
     }
