@@ -1,8 +1,8 @@
+use crate::output::Output;
 use clap::Subcommand;
 use serde_json::json;
 use std::path::Path;
 use thulp_core::{Parameter, ParameterType, ToolCall, ToolDefinition};
-use crate::output::Output;
 
 #[derive(Subcommand, Debug)]
 pub enum ToolCommands {
@@ -219,7 +219,6 @@ pub async fn handle_tool_commands(
     Ok(())
 }
 
-
 pub async fn run_demo(output: &Output) -> Result<(), Box<dyn std::error::Error>> {
     if output.is_json() {
         let read_file_tool = create_read_file_tool();
@@ -335,7 +334,6 @@ pub fn create_read_file_tool() -> ToolDefinition {
         )
         .build()
 }
-
 
 pub fn create_api_call_tool() -> ToolDefinition {
     ToolDefinition::builder("api_call")

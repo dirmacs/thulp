@@ -5,6 +5,7 @@ use async_trait::async_trait;
 use serde_json::Value;
 
 /// Trait for executable tools.
+#[allow(clippy::double_must_use)]
 #[async_trait]
 pub trait Tool: Send + Sync {
     /// Get the tool definition.
@@ -25,6 +26,7 @@ pub trait Tool: Send + Sync {
 }
 
 /// Trait for communication transports (MCP, HTTP, etc.).
+#[allow(clippy::double_must_use)]
 #[async_trait]
 pub trait Transport: Send + Sync {
     /// Connect to the transport.

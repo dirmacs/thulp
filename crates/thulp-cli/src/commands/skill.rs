@@ -1,7 +1,7 @@
+use crate::output::Output;
 use clap::{Subcommand, ValueEnum};
 use serde_json::json;
 use std::path::{Path, PathBuf};
-use crate::output::Output;
 
 #[derive(Subcommand, Debug)]
 pub enum SkillCommands {
@@ -290,9 +290,7 @@ pub struct SkillRunOpts<'a> {
     output: &'a Output,
 }
 
-pub async fn handle_skill_run(
-    opts: SkillRunOpts<'_>,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn handle_skill_run(opts: SkillRunOpts<'_>) -> Result<(), Box<dyn std::error::Error>> {
     let SkillRunOpts {
         workspace_dir: _workspace_dir,
         name,
@@ -361,7 +359,10 @@ pub async fn handle_skill_run(
     Ok(())
 }
 
-pub fn handle_skill_validate(file: &Path, output: &Output) -> Result<(), Box<dyn std::error::Error>> {
+pub fn handle_skill_validate(
+    file: &Path,
+    output: &Output,
+) -> Result<(), Box<dyn std::error::Error>> {
     if !file.exists() {
         return Err(format!("File not found: {}", file.display()).into());
     }

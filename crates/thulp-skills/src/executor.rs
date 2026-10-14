@@ -241,6 +241,7 @@ impl ExecutionContext {
 ///     }
 /// }
 /// ```
+#[allow(clippy::double_must_use)]
 #[async_trait]
 pub trait SkillExecutor: Send + Sync {
     /// Execute a complete skill.

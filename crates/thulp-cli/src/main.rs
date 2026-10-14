@@ -9,13 +9,13 @@ use thulp_core::{Parameter, ParameterType, ToolCall, ToolDefinition};
 #[cfg(feature = "mcp")]
 use thulp_mcp::{McpClient, McpTransport};
 
-mod output;
 mod commands;
-use output::{Output, OutputFormat};
+mod output;
 use commands::config::{ConfigCommands, ServerType};
-use commands::skill::{SkillCommands, SkillScope, ExportFormat};
-use commands::tools::ToolCommands;
 use commands::convert::ConvertCommands;
+use commands::skill::{ExportFormat, SkillCommands, SkillScope};
+use commands::tools::ToolCommands;
+use output::{Output, OutputFormat};
 
 #[cfg(feature = "mcp")]
 use commands::mcp::McpCommands;
@@ -128,9 +128,6 @@ enum Commands {
     },
 }
 
-
-
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
@@ -151,11 +148,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Skill { action } => {
             commands::skill::handle_skill_commands(action, &workspace_dir, &output).await?
         }
-        Commands::Tools { action } => commands::tools::handle_tool_commands(action, &output).await?,
+        Commands::Tools { action } => {
+            commands::tools::handle_tool_commands(action, &output).await?
+        }
         #[cfg(feature = "mcp")]
         Commands::Mcp { action } => commands::mcp::handle_mcp_commands(action, &output).await?,
-        Commands::Convert { action } => commands::convert::handle_convert_commands(action, &output)?,
-        Commands::Config { action } => commands::config::handle_config_commands(action, &workspace_dir, &output)?,
+        Commands::Convert { action } => {
+            commands::convert::handle_convert_commands(action, &output)?
+        }
+        Commands::Config { action } => {
+            commands::config::handle_config_commands(action, &workspace_dir, &output)?
+        }
         Commands::Demo => commands::tools::run_demo(&output).await?,
         Commands::Validate { file } => commands::tools::validate_file(&file, &output)?,
         Commands::Completions { shell, dir } => generate_completions(shell, dir)?,
@@ -163,8 +166,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-
-
 
 fn generate_completions(
     shell: Shell,
@@ -193,8 +194,6 @@ fn generate_completions(
 
     Ok(())
 }
-
-
 
 #[cfg(test)]
 mod tests {
@@ -247,7 +246,14 @@ mod tests {
 
     #[test]
     fn test_init_command_with_options() {
-        let cli = Cli::try_parse_from(["thulp", "init", "/tmp/workspace", "--name", "my-project", "--force"]);
+        let cli = Cli::try_parse_from([
+            "thulp",
+            "init",
+            "/tmp/workspace",
+            "--name",
+            "my-project",
+            "--force",
+        ]);
         assert!(cli.is_ok());
     }
 
@@ -259,13 +265,20 @@ mod tests {
 
     #[test]
     fn test_run_command_with_json() {
-        let cli = Cli::try_parse_from(["thulp", "run", "api_call", "--json", r#"{"url":"https://example.com"}"#]);
+        let cli = Cli::try_parse_from([
+            "thulp",
+            "run",
+            "api_call",
+            "--json",
+            r#"{"url":"https://example.com"}"#,
+        ]);
         assert!(cli.is_ok());
     }
 
     #[test]
     fn test_run_command_dry_run() {
-        let cli = Cli::try_parse_from(["thulp", "run", "read_file", "--dry-run", "path=/etc/hosts"]);
+        let cli =
+            Cli::try_parse_from(["thulp", "run", "read_file", "--dry-run", "path=/etc/hosts"]);
         assert!(cli.is_ok());
     }
 
@@ -289,18 +302,28 @@ mod tests {
 
     #[test]
     fn test_skill_run_command() {
-        let cli = Cli::try_parse_from(["thulp", "skill", "run", "search-and-summarize", "query=rust"]);
+        let cli = Cli::try_parse_from([
+            "thulp",
+            "skill",
+            "run",
+            "search-and-summarize",
+            "query=rust",
+        ]);
         assert!(cli.is_ok());
     }
 
     #[test]
     fn test_skill_run_with_options() {
         let cli = Cli::try_parse_from([
-            "thulp", "skill", "run", "my-skill",
-            "--timeout", "120",
+            "thulp",
+            "skill",
+            "run",
+            "my-skill",
+            "--timeout",
+            "120",
             "--dry-run",
             "--continue-on-error",
-            "input=value"
+            "input=value",
         ]);
         assert!(cli.is_ok());
     }
@@ -313,7 +336,8 @@ mod tests {
 
     #[test]
     fn test_skill_export_command() {
-        let cli = Cli::try_parse_from(["thulp", "skill", "export", "my-skill", "--format", "shell"]);
+        let cli =
+            Cli::try_parse_from(["thulp", "skill", "export", "my-skill", "--format", "shell"]);
         assert!(cli.is_ok());
     }
 
@@ -339,9 +363,13 @@ mod tests {
     fn test_config_add_server_stdio() {
         // Simple case without args that could be confused with flags
         let cli = Cli::try_parse_from([
-            "thulp", "config", "add-server", "github",
-            "--type", "stdio",
-            "npx"
+            "thulp",
+            "config",
+            "add-server",
+            "github",
+            "--type",
+            "stdio",
+            "npx",
         ]);
         assert!(cli.is_ok());
     }
@@ -350,9 +378,16 @@ mod tests {
     fn test_config_add_server_stdio_with_args() {
         // With args that look like flags, need to use -- separator
         let cli = Cli::try_parse_from([
-            "thulp", "config", "add-server", "github",
-            "--type", "stdio",
-            "--", "npx", "-a", "-y"
+            "thulp",
+            "config",
+            "add-server",
+            "github",
+            "--type",
+            "stdio",
+            "--",
+            "npx",
+            "-a",
+            "-y",
         ]);
         // This will fail because -- is interpreted differently
         // In practice, users would quote args or use --args flag
@@ -362,9 +397,13 @@ mod tests {
     #[test]
     fn test_config_add_server_http() {
         let cli = Cli::try_parse_from([
-            "thulp", "config", "add-server", "custom",
-            "--type", "http",
-            "https://mcp.example.com"
+            "thulp",
+            "config",
+            "add-server",
+            "custom",
+            "--type",
+            "http",
+            "https://mcp.example.com",
         ]);
         assert!(cli.is_ok());
     }
