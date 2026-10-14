@@ -1,7 +1,7 @@
+use crate::output::Output;
 use clap::{Subcommand, ValueEnum};
 use serde_json::json;
 use std::path::{Path, PathBuf};
-use crate::output::Output;
 
 #[derive(Subcommand, Debug)]
 pub enum ConfigCommands {

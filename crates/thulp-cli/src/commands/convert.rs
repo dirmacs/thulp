@@ -1,8 +1,8 @@
+use crate::output::Output;
 use clap::Subcommand;
 use serde_json::json;
 use std::path::PathBuf;
 use thulp_adapter::AdapterGenerator;
-use crate::output::Output;
 
 #[derive(Subcommand, Debug)]
 pub enum ConvertCommands {
@@ -17,7 +17,6 @@ pub enum ConvertCommands {
     /// Show conversion examples
     Examples,
 }
-
 
 pub fn handle_convert_commands(
     command: ConvertCommands,
@@ -177,5 +176,3 @@ pub fn handle_convert_commands(
     }
     Ok(())
 }
-
-

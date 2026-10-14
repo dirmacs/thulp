@@ -16,9 +16,9 @@
 
 use crate::{McpClient, McpTransport, Result};
 use ares::tools::calculator::Calculator;
+use ares::tools::registry::Tool as AresTool;
 #[cfg(feature = "ares-search")]
 use ares::tools::search::WebSearch;
-use ares::tools::registry::Tool as AresTool;
 use ares::types::ToolDefinition as AresToolDefinition;
 use ares::ToolRegistry as AresRegistryInner;
 use std::sync::Arc;
@@ -283,7 +283,10 @@ mod tests {
         let default = AresToolRegistry::default();
         let explicit = AresToolRegistry::with_default_tools();
         assert_eq!(default.len(), explicit.len());
-        assert_eq!(default.has_tool("calculator"), explicit.has_tool("calculator"));
+        assert_eq!(
+            default.has_tool("calculator"),
+            explicit.has_tool("calculator")
+        );
     }
 
     #[tokio::test]

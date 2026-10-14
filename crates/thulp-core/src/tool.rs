@@ -925,7 +925,9 @@ mod tests {
         param.required = false;
         param.enum_values = vec![json!("low"), json!("med"), json!("high")];
         param.default = Some(json!("med"));
-        let def = ToolDefinition::builder("with_enum").parameter(param).build();
+        let def = ToolDefinition::builder("with_enum")
+            .parameter(param)
+            .build();
 
         let schema = def.to_mcp_input_schema();
         let level = &schema["properties"]["level"];

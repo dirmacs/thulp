@@ -1,7 +1,7 @@
+use crate::output::Output;
 use clap::Subcommand;
 use serde_json::json;
 use thulp_mcp::{McpClient, McpTransport};
-use crate::output::Output;
 
 #[derive(Subcommand, Debug)]
 pub enum McpCommands {
@@ -131,4 +131,3 @@ pub async fn handle_mcp_commands(
     }
     Ok(())
 }
-
