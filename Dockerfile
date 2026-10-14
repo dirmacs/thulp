@@ -1,47 +1,68 @@
-# Thulp CLI Docker Image
-# Multi-stage build for minimal final image size
+# syntax=docker/dockerfile:1.7
+# Thulp CLI Docker image.
+#
+# Multi-stage cargo-chef build: dependencies are cooked from a recipe that only
+# captures manifests, so the dependency layer is cached across source edits and
+# only the final `cargo build` recompiles the workspace crates themselves.
+#
+#   docker build -t thulp:local .
 
-# Build stage
-FROM rust:1.91-slim as builder
+ARG RUST_IMAGE=rust:1.91-slim
+ARG RUNTIME_IMAGE=debian:bookworm-slim
 
-WORKDIR /usr/src/thulp
+FROM ${RUST_IMAGE} AS chef
+RUN cargo install cargo-chef --locked
+WORKDIR /workspace/thulp
 
-# Install build dependencies
-RUN apt-get update && apt-get install -y \
+FROM chef AS planner
+COPY . /workspace/thulp/
+RUN cargo chef prepare --recipe-path recipe.json
+
+FROM chef AS builder
+ENV CARGO_TERM_COLOR=always
+# OpenSSL is built from source (openssl-sys vendored) by the crate graph.
+RUN apt-get update && apt-get install -y --no-install-recommends \
     pkg-config \
     libssl-dev \
     && rm -rf /var/lib/apt/lists/*
+# OpenSSL is built from source (openssl-sys vendored) by the crate graph, and
+# rs-utcp compiles gRPC protos at build time, so protoc is required.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    pkg-config \
+    libssl-dev \
+    protobuf-compiler \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=planner /workspace/thulp/recipe.json recipe.json
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/git \
+    --mount=type=cache,target=/workspace/thulp/target \
+    cargo chef cook --release --recipe-path recipe.json
 
-# Copy manifests
-COPY Cargo.toml Cargo.lock ./
-COPY crates ./crates
-COPY examples ./examples
+COPY . /workspace/thulp/
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/git \
+    --mount=type=cache,target=/workspace/thulp/target \
+    cargo build --release --bin thulp \
+    && mkdir -p /artifacts \
+    && cp target/release/thulp /artifacts/thulp
 
-# Build for release
-RUN cargo build --release --bin thulp
+FROM ${RUNTIME_IMAGE} AS runtime
 
-# Runtime stage
-FROM debian:bookworm-slim
-
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y \
+# Runtime dependencies.
+RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     libssl3 \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd -m -u 1000 thulp
 
-# Copy the built binary from builder
-COPY --from=builder /usr/src/thulp/target/release/thulp /usr/local/bin/thulp
+COPY --from=builder /artifacts/thulp /usr/local/bin/thulp
 
-# Set up a non-root user
-RUN useradd -m -u 1000 thulp
 USER thulp
 WORKDIR /home/thulp
 
-# Set the binary as entrypoint
 ENTRYPOINT ["/usr/local/bin/thulp"]
 CMD ["--help"]
 
-# Labels
 LABEL org.opencontainers.image.title="Thulp CLI"
 LABEL org.opencontainers.image.description="Execution context engineering platform for AI agents"
 LABEL org.opencontainers.image.url="https://github.com/dirmacs/thulp"
