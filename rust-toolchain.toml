@@ -1,0 +1,7 @@
+# The pin is necessary but NOT sufficient on this host — a shell that exports
+# RUSTUP_TOOLCHAIN overrides this file. Clear that variable (or set it to
+# 1.99.0) for any verification run. This file is the floor, not the guarantee.
+[toolchain]
+channel = "1.99.0"
+components = ["rustfmt", "clippy"]
+profile = "minimal"
