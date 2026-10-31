@@ -23,7 +23,7 @@ authors = ["Dirmacs <contact@dirmacs.org>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/dirmacs/thulp"
 description = "Execution context engineering platform for AI agents"
-rust-version = "1.75"
+rust-version = "1.99.0"
 
 [workspace.dependencies]
 # Internal crates
